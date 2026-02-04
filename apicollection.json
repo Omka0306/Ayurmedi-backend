@@ -1,0 +1,439 @@
+{
+  "info": {
+    "name": "Ayurmedi Backend - Phase 1 (Auth + Hospital Setup)",
+    "_postman_id": "ayurmedi-backend-phase1-v2",
+    "description": "Complete API collection for Ayurmedi backend testing. Includes Auth, Hospital Registration, and User Management APIs.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login - Super Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.accessToken) {",
+                  "        pm.environment.set('superAdminToken', jsonData.data.accessToken);",
+                  "        pm.environment.set('idToken', jsonData.data.idToken);",
+                  "        pm.environment.set('refreshToken', jsonData.data.refreshToken);",
+                  "        console.log('Super Admin token saved to environment');",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@ayurmedi.com\",\n  \"password\": \"Admin@2026\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Login as Super Admin. This will return access tokens that can be used for authenticated requests."
+          },
+          "response": []
+        },
+        {
+          "name": "Login - Hospital Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.accessToken) {",
+                  "        pm.environment.set('hospitalAdminToken', jsonData.data.accessToken);",
+                  "        console.log('Hospital Admin token saved to environment');",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@hospital1.com\",\n  \"password\": \"HospitalAdmin@123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Login as Hospital Admin. Use this after registering a hospital. Update email/password based on your hospital admin credentials."
+          },
+          "response": []
+        },
+        {
+          "name": "Login - Doctor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.accessToken) {",
+                  "        pm.environment.set('doctorToken', jsonData.data.accessToken);",
+                  "        console.log('Doctor token saved to environment');",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"doctor1@hospital1.com\",\n  \"password\": \"Doctor@123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Login as Doctor. Use this after creating a doctor user."
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{superAdminToken}}",
+                "description": "Can use any valid token"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Logout current user. In Phase 1, this is a logical operation - clients should discard tokens."
+          },
+          "response": []
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"doctor1@hospital1.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/forgot-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "forgot-password"
+              ]
+            },
+            "description": "Request a password reset code. A confirmation code will be sent to the user's email."
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"doctor1@hospital1.com\",\n  \"confirmationCode\": \"123456\",\n  \"newPassword\": \"NewPassword@123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/reset-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "reset-password"
+              ]
+            },
+            "description": "Reset password using the confirmation code received via email."
+          },
+          "response": []
+        }
+      ],
+      "description": "Authentication endpoints for login, logout, and password management"
+    },
+    {
+      "name": "Hospital Management",
+      "item": [
+        {
+          "name": "Register Hospital (SUPER_ADMIN only)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.hospital) {",
+                  "        pm.environment.set('hospitalId', jsonData.data.hospital.hospital_id);",
+                  "        console.log('Hospital ID saved:', jsonData.data.hospital.hospital_id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{superAdminToken}}",
+                "description": "Requires Super Admin token"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hospital_code\": \"HOSP001\",\n  \"name\": \"City General Hospital\",\n  \"registration_no\": \"REG-2026-001\",\n  \"type\": \"MULTI_SPECIALITY\",\n  \"owner_name\": \"Dr. John Doe\",\n  \"email\": \"contact@hospital1.com\",\n  \"website\": \"https://hospital1.com\",\n  \"subscription_plan\": \"STANDARD\",\n  \"subscription_start\": \"2026-02-04T00:00:00.000Z\",\n  \"subscription_end\": \"2027-02-04T00:00:00.000Z\",\n  \"admin_full_name\": \"Jane Smith\",\n  \"admin_email\": \"admin@hospital1.com\",\n  \"admin_mobile\": \"+919876543210\",\n  \"admin_password\": \"HospitalAdmin@123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/hospital/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hospital",
+                "register"
+              ]
+            },
+            "description": "Register a new hospital with its admin user. Only SUPER_ADMIN can perform this operation.\n\nRequired fields:\n- hospital_code: Unique hospital code\n- name: Hospital name\n- admin_email: Email for hospital admin\n- admin_password: Password for hospital admin\n\nOptional fields:\n- registration_no: Hospital registration number\n- type: Hospital type (e.g., MULTI_SPECIALITY, CLINIC, etc.)\n- owner_name: Hospital owner name\n- email: Hospital contact email\n- website: Hospital website\n- subscription_plan: Subscription plan (BASIC, STANDARD, PREMIUM)\n- subscription_start: Subscription start date\n- subscription_end: Subscription end date\n- admin_full_name: Full name of hospital admin\n- admin_mobile: Mobile number of hospital admin"
+          },
+          "response": []
+        }
+      ],
+      "description": "Hospital management endpoints"
+    },
+    {
+      "name": "User Management",
+      "item": [
+        {
+          "name": "Create User - Doctor (HOSPITAL_ADMIN only)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hospitalAdminToken}}",
+                "description": "Requires Hospital Admin token"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Dr. Sarah Connor\",\n  \"email\": \"doctor1@hospital1.com\",\n  \"mobile\": \"+919876543211\",\n  \"role\": \"DOCTOR\",\n  \"password\": \"Doctor@123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/user/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user",
+                "create"
+              ]
+            },
+            "description": "Create a new user (Doctor, Reception, or Assistant) within the hospital. Only HOSPITAL_ADMIN can perform this operation.\n\nAvailable roles:\n- DOCTOR\n- RECEPTION\n- ASSISTANT\n\nRequired fields:\n- full_name: User's full name\n- email: User's email\n- role: User's role\n- password: User's password\n\nOptional fields:\n- mobile: User's mobile number"
+          },
+          "response": []
+        },
+        {
+          "name": "Create User - Reception (HOSPITAL_ADMIN only)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hospitalAdminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Maria Garcia\",\n  \"email\": \"reception1@hospital1.com\",\n  \"mobile\": \"+919876543212\",\n  \"role\": \"RECEPTION\",\n  \"password\": \"Reception@123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/user/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user",
+                "create"
+              ]
+            },
+            "description": "Create a reception user within the hospital."
+          },
+          "response": []
+        },
+        {
+          "name": "Create User - Assistant (HOSPITAL_ADMIN only)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hospitalAdminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Robert Johnson\",\n  \"email\": \"assistant1@hospital1.com\",\n  \"mobile\": \"+919876543213\",\n  \"role\": \"ASSISTANT\",\n  \"password\": \"Assistant@123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/user/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user",
+                "create"
+              ]
+            },
+            "description": "Create an assistant user within the hospital."
+          },
+          "response": []
+        }
+      ],
+      "description": "User management endpoints for creating hospital staff"
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://4cltegzk16.execute-api.ap-south-1.amazonaws.com",
+      "type": "string",
+      "description": "AWS API Gateway endpoint. Change to http://localhost:3000 for local testing."
+    },
+    {
+      "key": "superAdminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "hospitalAdminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "doctorToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "hospitalId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
