@@ -14,6 +14,12 @@ provider:
     STAGE: ${self:provider.stage}
     HOSPITALS_TABLE: ${self:service}-hospitals-${self:provider.stage}
     USERS_TABLE: ${self:service}-users-${self:provider.stage}
+    MEDICINES_TABLE: ${self:service}-medicines-${self:provider.stage}
+    DROPDOWN_CATEGORIES_TABLE: ${self:service}-dropdown-categories-${self:provider.stage}
+    DROPDOWN_OPTIONS_TABLE: ${self:service}-dropdown-options-${self:provider.stage}
+    DISEASES_TABLE: ${self:service}-diseases-${self:provider.stage}
+    TREATMENTS_TABLE: ${self:service}-treatments-${self:provider.stage}
+    PRESCRIPTION_TEMPLATES_TABLE: ${self:service}-prescription-templates-${self:provider.stage}
     USER_POOL_ID: !Ref AyurmediUserPool
     USER_POOL_CLIENT_ID: !Ref AyurmediUserPoolClient
 
@@ -25,11 +31,25 @@ provider:
             - dynamodb:PutItem
             - dynamodb:GetItem
             - dynamodb:Query
+            - dynamodb:UpdateItem
+            - dynamodb:Scan
           Resource:
             - !GetAtt HospitalsTable.Arn
             - !GetAtt UsersTable.Arn
+            - !GetAtt MedicinesTable.Arn
+            - !GetAtt DropdownCategoriesTable.Arn
+            - !GetAtt DropdownOptionsTable.Arn
+            - !GetAtt DiseasesTable.Arn
+            - !GetAtt TreatmentsTable.Arn
+            - !GetAtt PrescriptionTemplatesTable.Arn
             - !Sub '${UsersTable.Arn}/index/*'
             - !Sub '${HospitalsTable.Arn}/index/*'
+            - !Sub '${MedicinesTable.Arn}/index/*'
+            - !Sub '${DropdownCategoriesTable.Arn}/index/*'
+            - !Sub '${DropdownOptionsTable.Arn}/index/*'
+            - !Sub '${DiseasesTable.Arn}/index/*'
+            - !Sub '${TreatmentsTable.Arn}/index/*'
+            - !Sub '${PrescriptionTemplatesTable.Arn}/index/*'
         - Effect: Allow
           Action:
             - cognito-idp:AdminCreateUser
@@ -83,6 +103,130 @@ functions:
           method: POST
           path: /user/create
 
+  # Medicines APIs
+  medicineCreate:
+    handler: src/handlers/medicine.create
+    events:
+      - httpApi:
+          method: POST
+          path: /medicines/create
+
+  medicineList:
+    handler: src/handlers/medicine.list
+    events:
+      - httpApi:
+          method: GET
+          path: /medicines/list
+
+  medicineSearch:
+    handler: src/handlers/medicine.search
+    events:
+      - httpApi:
+          method: GET
+          path: /medicines/search
+
+  medicineUpdateStatus:
+    handler: src/handlers/medicine.updateStatus
+    events:
+      - httpApi:
+          method: PATCH
+          path: /medicines/{id}/status
+
+  # Dropdown APIs
+  dropdownList:
+    handler: src/handlers/dropdown.list
+    events:
+      - httpApi:
+          method: GET
+          path: /dropdowns/list
+
+  dropdownOptions:
+    handler: src/handlers/dropdown.options
+    events:
+      - httpApi:
+          method: GET
+          path: /dropdowns/{dropdown_code}/options
+
+  dropdownGetAllWithOptions:
+    handler: src/handlers/dropdown.getAllWithOptions
+    events:
+      - httpApi:
+          method: GET
+          path: /dropdowns/all-with-options
+
+  dropdownCreateCategory:
+    handler: src/handlers/dropdown.createCategory
+    events:
+      - httpApi:
+          method: POST
+          path: /dropdowns/category/create
+
+  dropdownCreateOption:
+    handler: src/handlers/dropdown.createOption
+    events:
+      - httpApi:
+          method: POST
+          path: /dropdowns/option/create
+
+  medicineByType:
+    handler: src/handlers/medicine.getByType
+    events:
+      - httpApi:
+          method: GET
+          path: /medicines/by-type
+
+  # Diseases APIs
+  diseaseCreate:
+    handler: src/handlers/disease.create
+    events:
+      - httpApi:
+          method: POST
+          path: /diseases/create
+
+  diseaseList:
+    handler: src/handlers/disease.list
+    events:
+      - httpApi:
+          method: GET
+          path: /diseases/list
+
+  # Treatments APIs
+  treatmentCreate:
+    handler: src/handlers/treatment.create
+    events:
+      - httpApi:
+          method: POST
+          path: /treatments/create
+
+  treatmentListByDisease:
+    handler: src/handlers/treatment.listByDisease
+    events:
+      - httpApi:
+          method: GET
+          path: /treatments/by-disease/{disease_id}
+
+  # Prescription Template APIs
+  prescriptionTemplateCreate:
+    handler: src/handlers/prescription.templateCreate
+    events:
+      - httpApi:
+          method: POST
+          path: /prescriptions/template/create
+
+  prescriptionTemplateList:
+    handler: src/handlers/prescription.templateList
+    events:
+      - httpApi:
+          method: GET
+          path: /prescriptions/templates/list
+
+  prescriptionTemplateGet:
+    handler: src/handlers/prescription.templateGet
+    events:
+      - httpApi:
+          method: GET
+          path: /prescriptions/template/{id}
+
 resources:
   Resources:
     HospitalsTable:
@@ -123,6 +267,178 @@ resources:
           - IndexName: cognito_user_id-index
             KeySchema:
               - AttributeName: cognito_user_id
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+
+    MedicinesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.MEDICINES_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: medicine_id
+            AttributeType: S
+          - AttributeName: hospital_id
+            AttributeType: S
+          - AttributeName: medicine_type
+            AttributeType: S
+          - AttributeName: name_mr
+            AttributeType: S
+        KeySchema:
+          - AttributeName: medicine_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: hospital-type-index
+            KeySchema:
+              - AttributeName: hospital_id
+                KeyType: HASH
+              - AttributeName: medicine_type
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+          - IndexName: hospital-name-index
+            KeySchema:
+              - AttributeName: hospital_id
+                KeyType: HASH
+              - AttributeName: name_mr
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+
+    DropdownCategoriesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.DROPDOWN_CATEGORIES_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: dropdown_id
+            AttributeType: S
+          - AttributeName: dropdown_code
+            AttributeType: S
+          - AttributeName: hospital_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: dropdown_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: dropdown-code-index
+            KeySchema:
+              - AttributeName: dropdown_code
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+          - IndexName: hospital-dropdown-index
+            KeySchema:
+              - AttributeName: hospital_id
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+
+    DropdownOptionsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.DROPDOWN_OPTIONS_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: option_id
+            AttributeType: S
+          - AttributeName: dropdown_id
+            AttributeType: S
+          - AttributeName: hospital_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: option_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: dropdown-options-index
+            KeySchema:
+              - AttributeName: dropdown_id
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+          - IndexName: hospital-options-index
+            KeySchema:
+              - AttributeName: hospital_id
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+
+    DiseasesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.DISEASES_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: disease_id
+            AttributeType: S
+          - AttributeName: hospital_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: disease_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: hospital-diseases-index
+            KeySchema:
+              - AttributeName: hospital_id
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+
+    TreatmentsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.TREATMENTS_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: treatment_id
+            AttributeType: S
+          - AttributeName: disease_id
+            AttributeType: S
+          - AttributeName: hospital_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: treatment_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: disease-treatments-index
+            KeySchema:
+              - AttributeName: disease_id
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+          - IndexName: hospital-treatments-index
+            KeySchema:
+              - AttributeName: hospital_id
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+
+    PrescriptionTemplatesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.PRESCRIPTION_TEMPLATES_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: template_id
+            AttributeType: S
+          - AttributeName: hospital_id
+            AttributeType: S
+          - AttributeName: disease_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: template_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: hospital-templates-index
+            KeySchema:
+              - AttributeName: hospital_id
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+          - IndexName: disease-templates-index
+            KeySchema:
+              - AttributeName: disease_id
                 KeyType: HASH
             Projection:
               ProjectionType: ALL

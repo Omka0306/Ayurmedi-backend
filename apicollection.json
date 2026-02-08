@@ -1,8 +1,7 @@
 {
   "info": {
-    "name": "Ayurmedi Backend - Phase 1 (Auth + Hospital Setup)",
-    "_postman_id": "ayurmedi-backend-phase1-v2",
-    "description": "Complete API collection for Ayurmedi backend testing. Includes Auth, Hospital Registration, and User Management APIs.",
+    "name": "Ayurmedi Backend API",
+    "description": "Complete API collection for Ayurmedi Backend - Hospital Management System",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -17,16 +16,13 @@
               "script": {
                 "exec": [
                   "if (pm.response.code === 200) {",
-                  "    var jsonData = pm.response.json();",
-                  "    if (jsonData.data && jsonData.data.accessToken) {",
-                  "        pm.environment.set('superAdminToken', jsonData.data.accessToken);",
-                  "        pm.environment.set('idToken', jsonData.data.idToken);",
-                  "        pm.environment.set('refreshToken', jsonData.data.refreshToken);",
-                  "        console.log('Super Admin token saved to environment');",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data.accessToken) {",
+                  "        pm.collectionVariables.set('superAdminToken', response.data.accessToken);",
+                  "        console.log('Super Admin token saved');",
                   "    }",
                   "}"
-                ],
-                "type": "text/javascript"
+                ]
               }
             }
           ],
@@ -52,9 +48,8 @@
                 "login"
               ]
             },
-            "description": "Login as Super Admin. This will return access tokens that can be used for authenticated requests."
-          },
-          "response": []
+            "description": "Login with Super Admin credentials to get access token"
+          }
         },
         {
           "name": "Login - Hospital Admin",
@@ -64,14 +59,13 @@
               "script": {
                 "exec": [
                   "if (pm.response.code === 200) {",
-                  "    var jsonData = pm.response.json();",
-                  "    if (jsonData.data && jsonData.data.accessToken) {",
-                  "        pm.environment.set('hospitalAdminToken', jsonData.data.accessToken);",
-                  "        console.log('Hospital Admin token saved to environment');",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data.accessToken) {",
+                  "        pm.collectionVariables.set('hospitalAdminToken', response.data.accessToken);",
+                  "        console.log('Hospital Admin token saved');",
                   "    }",
                   "}"
-                ],
-                "type": "text/javascript"
+                ]
               }
             }
           ],
@@ -97,54 +91,8 @@
                 "login"
               ]
             },
-            "description": "Login as Hospital Admin. Use this after registering a hospital. Update email/password based on your hospital admin credentials."
-          },
-          "response": []
-        },
-        {
-          "name": "Login - Doctor",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 200) {",
-                  "    var jsonData = pm.response.json();",
-                  "    if (jsonData.data && jsonData.data.accessToken) {",
-                  "        pm.environment.set('doctorToken', jsonData.data.accessToken);",
-                  "        console.log('Doctor token saved to environment');",
-                  "    }",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"doctor1@hospital1.com\",\n  \"password\": \"Doctor@123\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/auth/login",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "login"
-              ]
-            },
-            "description": "Login as Doctor. Use this after creating a doctor user."
-          },
-          "response": []
+            "description": "Login with Hospital Admin credentials"
+          }
         },
         {
           "name": "Logout",
@@ -157,14 +105,9 @@
               },
               {
                 "key": "Authorization",
-                "value": "Bearer {{superAdminToken}}",
-                "description": "Can use any valid token"
+                "value": "Bearer {{superAdminToken}}"
               }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{}"
-            },
             "url": {
               "raw": "{{baseUrl}}/auth/logout",
               "host": [
@@ -174,10 +117,8 @@
                 "auth",
                 "logout"
               ]
-            },
-            "description": "Logout current user. In Phase 1, this is a logical operation - clients should discard tokens."
-          },
-          "response": []
+            }
+          }
         },
         {
           "name": "Forgot Password",
@@ -191,7 +132,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"doctor1@hospital1.com\"\n}"
+              "raw": "{\n  \"email\": \"user@example.com\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/auth/forgot-password",
@@ -202,10 +143,8 @@
                 "auth",
                 "forgot-password"
               ]
-            },
-            "description": "Request a password reset code. A confirmation code will be sent to the user's email."
-          },
-          "response": []
+            }
+          }
         },
         {
           "name": "Reset Password",
@@ -219,7 +158,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"doctor1@hospital1.com\",\n  \"confirmationCode\": \"123456\",\n  \"newPassword\": \"NewPassword@123\"\n}"
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"code\": \"123456\",\n  \"newPassword\": \"NewPassword@123\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/auth/reset-password",
@@ -230,33 +169,29 @@
                 "auth",
                 "reset-password"
               ]
-            },
-            "description": "Reset password using the confirmation code received via email."
-          },
-          "response": []
+            }
+          }
         }
-      ],
-      "description": "Authentication endpoints for login, logout, and password management"
+      ]
     },
     {
       "name": "Hospital Management",
       "item": [
         {
-          "name": "Register Hospital (SUPER_ADMIN only)",
+          "name": "Register Hospital",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
                   "if (pm.response.code === 200) {",
-                  "    var jsonData = pm.response.json();",
-                  "    if (jsonData.data && jsonData.data.hospital) {",
-                  "        pm.environment.set('hospitalId', jsonData.data.hospital.hospital_id);",
-                  "        console.log('Hospital ID saved:', jsonData.data.hospital.hospital_id);",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data.hospital) {",
+                  "        pm.collectionVariables.set('hospitalId', response.data.hospital.hospital_id);",
+                  "        console.log('Hospital ID saved:', response.data.hospital.hospital_id);",
                   "    }",
                   "}"
-                ],
-                "type": "text/javascript"
+                ]
               }
             }
           ],
@@ -269,13 +204,12 @@
               },
               {
                 "key": "Authorization",
-                "value": "Bearer {{superAdminToken}}",
-                "description": "Requires Super Admin token"
+                "value": "Bearer {{superAdminToken}}"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"hospital_code\": \"HOSP001\",\n  \"name\": \"City General Hospital\",\n  \"registration_no\": \"REG-2026-001\",\n  \"type\": \"MULTI_SPECIALITY\",\n  \"owner_name\": \"Dr. John Doe\",\n  \"email\": \"contact@hospital1.com\",\n  \"website\": \"https://hospital1.com\",\n  \"subscription_plan\": \"STANDARD\",\n  \"subscription_start\": \"2026-02-04T00:00:00.000Z\",\n  \"subscription_end\": \"2027-02-04T00:00:00.000Z\",\n  \"admin_full_name\": \"Jane Smith\",\n  \"admin_email\": \"admin@hospital1.com\",\n  \"admin_mobile\": \"+919876543210\",\n  \"admin_password\": \"HospitalAdmin@123\"\n}"
+              "raw": "{\n  \"hospital_code\": \"HOSP001\",\n  \"name\": \"Test Hospital\",\n  \"address\": \"123 Main Street\",\n  \"city\": \"Mumbai\",\n  \"state\": \"Maharashtra\",\n  \"country\": \"India\",\n  \"pincode\": \"400001\",\n  \"contact_number\": \"9876543210\",\n  \"email\": \"contact@hospital1.com\",\n  \"admin_email\": \"admin@hospital1.com\",\n  \"admin_password\": \"HospitalAdmin@123\",\n  \"admin_full_name\": \"Hospital Admin\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/hospital/register",
@@ -287,51 +221,16 @@
                 "register"
               ]
             },
-            "description": "Register a new hospital with its admin user. Only SUPER_ADMIN can perform this operation.\n\nRequired fields:\n- hospital_code: Unique hospital code\n- name: Hospital name\n- admin_email: Email for hospital admin\n- admin_password: Password for hospital admin\n\nOptional fields:\n- registration_no: Hospital registration number\n- type: Hospital type (e.g., MULTI_SPECIALITY, CLINIC, etc.)\n- owner_name: Hospital owner name\n- email: Hospital contact email\n- website: Hospital website\n- subscription_plan: Subscription plan (BASIC, STANDARD, PREMIUM)\n- subscription_start: Subscription start date\n- subscription_end: Subscription end date\n- admin_full_name: Full name of hospital admin\n- admin_mobile: Mobile number of hospital admin"
-          },
-          "response": []
+            "description": "Register a new hospital (SUPER_ADMIN only)"
+          }
         }
-      ],
-      "description": "Hospital management endpoints"
+      ]
     },
     {
       "name": "User Management",
       "item": [
         {
-          "name": "Create User - Doctor (HOSPITAL_ADMIN only)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{hospitalAdminToken}}",
-                "description": "Requires Hospital Admin token"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"full_name\": \"Dr. Sarah Connor\",\n  \"email\": \"doctor1@hospital1.com\",\n  \"mobile\": \"+919876543211\",\n  \"role\": \"DOCTOR\",\n  \"password\": \"Doctor@123\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/user/create",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "user",
-                "create"
-              ]
-            },
-            "description": "Create a new user (Doctor, Reception, or Assistant) within the hospital. Only HOSPITAL_ADMIN can perform this operation.\n\nAvailable roles:\n- DOCTOR\n- RECEPTION\n- ASSISTANT\n\nRequired fields:\n- full_name: User's full name\n- email: User's email\n- role: User's role\n- password: User's password\n\nOptional fields:\n- mobile: User's mobile number"
-          },
-          "response": []
-        },
-        {
-          "name": "Create User - Reception (HOSPITAL_ADMIN only)",
+          "name": "Create User",
           "request": {
             "method": "POST",
             "header": [
@@ -346,7 +245,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"full_name\": \"Maria Garcia\",\n  \"email\": \"reception1@hospital1.com\",\n  \"mobile\": \"+919876543212\",\n  \"role\": \"RECEPTION\",\n  \"password\": \"Reception@123\"\n}"
+              "raw": "{\n  \"full_name\": \"Dr. John Doe\",\n  \"email\": \"doctor1@hospital1.com\",\n  \"role\": \"DOCTOR\",\n  \"password\": \"Doctor@123\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/user/create",
@@ -358,82 +257,463 @@
                 "create"
               ]
             },
-            "description": "Create a reception user within the hospital."
-          },
-          "response": []
-        },
-        {
-          "name": "Create User - Assistant (HOSPITAL_ADMIN only)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{hospitalAdminToken}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"full_name\": \"Robert Johnson\",\n  \"email\": \"assistant1@hospital1.com\",\n  \"mobile\": \"+919876543213\",\n  \"role\": \"ASSISTANT\",\n  \"password\": \"Assistant@123\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/user/create",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "user",
-                "create"
-              ]
-            },
-            "description": "Create an assistant user within the hospital."
-          },
-          "response": []
+            "description": "Create a new user (HOSPITAL_ADMIN only)"
+          }
         }
-      ],
-      "description": "User management endpoints for creating hospital staff"
+      ]
+    },
+    {
+      "name": "Medicines",
+      "item": [
+        {
+          "name": "Create Medicine",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hospitalAdminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name_mr\": \"पॅरासिटामोल\",\n  \"name_en\": \"Paracetamol\",\n  \"medicine_type\": \"ALLOPATHY\",\n  \"description\": \"Pain relief and fever reducer\",\n  \"dosage_form\": \"Tablet\",\n  \"strength\": \"500mg\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/medicines/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "medicines",
+                "create"
+              ]
+            },
+            "description": "Create a new medicine"
+          }
+        },
+        {
+          "name": "List Medicines",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hospitalAdminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/medicines/list?medicine_type=ALLOPATHY&limit=50",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "medicines",
+                "list"
+              ],
+              "query": [
+                {
+                  "key": "medicine_type",
+                  "value": "ALLOPATHY",
+                  "description": "Optional: ALLOPATHY, AYURVEDIC, HOMEOPATHY"
+                },
+                {
+                  "key": "limit",
+                  "value": "50",
+                  "description": "Number of results"
+                }
+              ]
+            },
+            "description": "Get list of medicines for the hospital"
+          }
+        },
+        {
+          "name": "Search Medicines",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hospitalAdminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/medicines/search?query=para",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "medicines",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "query",
+                  "value": "para",
+                  "description": "Search term"
+                }
+              ]
+            },
+            "description": "Search medicines by name (Marathi or English)"
+          }
+        },
+        {
+          "name": "Update Medicine Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hospitalAdminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_active\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/medicines/:id/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "medicines",
+                ":id",
+                "status"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "medicine-id-here"
+                }
+              ]
+            },
+            "description": "Activate or deactivate a medicine"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dropdowns",
+      "item": [
+        {
+          "name": "List Dropdowns",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hospitalAdminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dropdowns/list",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dropdowns",
+                "list"
+              ]
+            },
+            "description": "Get all dropdown categories"
+          }
+        },
+        {
+          "name": "Get Dropdown Options",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hospitalAdminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dropdowns/:dropdown_code/options",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dropdowns",
+                ":dropdown_code",
+                "options"
+              ],
+              "variable": [
+                {
+                  "key": "dropdown_code",
+                  "value": "GENDER",
+                  "description": "Examples: GENDER, BLOOD_GROUP, MARITAL_STATUS"
+                }
+              ]
+            },
+            "description": "Get options for a specific dropdown"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Diseases",
+      "item": [
+        {
+          "name": "Create Disease",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hospitalAdminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name_mr\": \"ताप\",\n  \"name_en\": \"Fever\",\n  \"description\": \"High body temperature\",\n  \"category\": \"COMMON\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/diseases/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "diseases",
+                "create"
+              ]
+            },
+            "description": "Create a new disease entry"
+          }
+        },
+        {
+          "name": "List Diseases",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hospitalAdminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/diseases/list?limit=50",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "diseases",
+                "list"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "Get list of diseases"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Treatments",
+      "item": [
+        {
+          "name": "Create Treatment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hospitalAdminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"disease_id\": \"disease-id-here\",\n  \"name_mr\": \"उपचार\",\n  \"name_en\": \"Treatment\",\n  \"description\": \"Standard treatment protocol\",\n  \"treatment_type\": \"ALLOPATHY\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/treatments/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "treatments",
+                "create"
+              ]
+            },
+            "description": "Create a new treatment"
+          }
+        },
+        {
+          "name": "List Treatments by Disease",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hospitalAdminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/treatments/by-disease/:disease_id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "treatments",
+                "by-disease",
+                ":disease_id"
+              ],
+              "variable": [
+                {
+                  "key": "disease_id",
+                  "value": "disease-id-here"
+                }
+              ]
+            },
+            "description": "Get all treatments for a specific disease"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Prescription Templates",
+      "item": [
+        {
+          "name": "Create Prescription Template",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hospitalAdminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"disease_id\": \"disease-id-here\",\n  \"template_name\": \"Fever Treatment Protocol\",\n  \"medicines\": [\n    {\n      \"medicine_id\": \"medicine-id-1\",\n      \"dosage\": \"1 tablet\",\n      \"frequency\": \"Twice daily\",\n      \"duration\": \"5 days\",\n      \"instructions_mr\": \"जेवणानंतर\",\n      \"instructions_en\": \"After meals\"\n    }\n  ],\n  \"general_instructions_mr\": \"भरपूर पाणी प्या\",\n  \"general_instructions_en\": \"Drink plenty of water\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/prescriptions/template/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "prescriptions",
+                "template",
+                "create"
+              ]
+            },
+            "description": "Create a prescription template for a disease"
+          }
+        },
+        {
+          "name": "List Prescription Templates",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hospitalAdminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/prescriptions/templates/list?disease_id=disease-id-here",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "prescriptions",
+                "templates",
+                "list"
+              ],
+              "query": [
+                {
+                  "key": "disease_id",
+                  "value": "disease-id-here",
+                  "description": "Optional: filter by disease"
+                }
+              ]
+            },
+            "description": "Get all prescription templates"
+          }
+        },
+        {
+          "name": "Get Prescription Template",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hospitalAdminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/prescriptions/template/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "prescriptions",
+                "template",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "template-id-here"
+                }
+              ]
+            },
+            "description": "Get a specific prescription template by ID"
+          }
+        }
+      ]
     }
   ],
   "variable": [
     {
       "key": "baseUrl",
-      "value": "https://4cltegzk16.execute-api.ap-south-1.amazonaws.com",
+      "value": "https://m6y68bub70.execute-api.ap-south-1.amazonaws.com",
       "type": "string",
-      "description": "AWS API Gateway endpoint. Change to http://localhost:3000 for local testing."
+      "description": "AWS API Gateway endpoint"
     },
     {
       "key": "superAdminToken",
       "value": "",
-      "type": "string"
+      "type": "string",
+      "description": "Super Admin access token (auto-saved after login)"
     },
     {
       "key": "hospitalAdminToken",
       "value": "",
-      "type": "string"
-    },
-    {
-      "key": "doctorToken",
-      "value": "",
-      "type": "string"
+      "type": "string",
+      "description": "Hospital Admin access token (auto-saved after login)"
     },
     {
       "key": "hospitalId",
       "value": "",
-      "type": "string"
-    },
-    {
-      "key": "idToken",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "refreshToken",
-      "value": "",
-      "type": "string"
+      "type": "string",
+      "description": "Hospital ID (auto-saved after hospital registration)"
     }
   ]
 }

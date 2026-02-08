@@ -10,6 +10,12 @@ module.exports = {
   TABLES: {
     HOSPITALS: process.env.HOSPITALS_TABLE || `ayurmedi-backend-hospitals-${STAGE}`,
     USERS: process.env.USERS_TABLE || `ayurmedi-backend-users-${STAGE}`,
+    MEDICINES: process.env.MEDICINES_TABLE || `ayurmedi-backend-medicines-${STAGE}`,
+    DROPDOWN_CATEGORIES: process.env.DROPDOWN_CATEGORIES_TABLE || `ayurmedi-backend-dropdown-categories-${STAGE}`,
+    DROPDOWN_OPTIONS: process.env.DROPDOWN_OPTIONS_TABLE || `ayurmedi-backend-dropdown-options-${STAGE}`,
+    DISEASES: process.env.DISEASES_TABLE || `ayurmedi-backend-diseases-${STAGE}`,
+    TREATMENTS: process.env.TREATMENTS_TABLE || `ayurmedi-backend-treatments-${STAGE}`,
+    PRESCRIPTION_TEMPLATES: process.env.PRESCRIPTION_TEMPLATES_TABLE || `ayurmedi-backend-prescription-templates-${STAGE}`,
   },
 
   ROLES: {
@@ -18,6 +24,11 @@ module.exports = {
     DOCTOR: 'DOCTOR',
     RECEPTION: 'RECEPTION',
     ASSISTANT: 'ASSISTANT',
+  },
+
+  LANGUAGES: {
+    MARATHI: 'mr',
+    ENGLISH: 'en',
   },
 };
 

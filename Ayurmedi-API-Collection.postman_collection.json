@@ -1,0 +1,371 @@
+{
+    "info": {
+        "name": "Ayurmedi Backend API - Complete Collection",
+        "description": "Complete API collection for Ayurmedi Backend with all working endpoints including new comprehensive APIs\n\nBase URL: https://m6y68bub70.execute-api.ap-south-1.amazonaws.com\n\nAll endpoints tested and verified working ✅",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+        "_exporter_id": "ayurmedi-backend"
+    },
+    "auth": {
+        "type": "bearer",
+        "bearer": [
+            {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+            }
+        ]
+    },
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "https://m6y68bub70.execute-api.ap-south-1.amazonaws.com",
+            "type": "string"
+        },
+        {
+            "key": "authToken",
+            "value": "",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "Authentication",
+            "item": [
+                {
+                    "name": "Login - Super Admin",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    const response = pm.response.json();",
+                                    "    if (response.success && response.data.accessToken) {",
+                                    "        pm.collectionVariables.set('authToken', response.data.accessToken);",
+                                    "        console.log('Token saved:', response.data.accessToken);",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"admin@ayurmedi.com\",\n  \"password\": \"Admin@2026\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/login",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "login"
+                            ]
+                        },
+                        "description": "Login as Super Admin\n\n✅ Status: PASS (200)\n\nResponse includes JWT access token that is automatically saved to collection variables."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Logout",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/logout",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "logout"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Medicines",
+            "item": [
+                {
+                    "name": "List All Medicines",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/medicines/list",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "medicines",
+                                "list"
+                            ]
+                        },
+                        "description": "✅ Status: PASS (200)\n\nReturns all medicines (31+)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Medicines Grouped By Type ⭐ NEW",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/medicines/by-type",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "medicines",
+                                "by-type"
+                            ]
+                        },
+                        "description": "✅ Status: PASS (200)\n\n⭐ **NEW COMPREHENSIVE API**\n\nReturns ALL medicines organized by medicine_type in a single call!\n\nResponse structure:\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"medicines_by_type\": {\n      \"kashay\": [],\n      \"tail\": [],\n      \"churna\": [],\n      \"vati\": [],\n      \"avaleha\": [],\n      \"arishta\": []\n    }\n  }\n}\n```"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Search Medicines",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/medicines/search?query=त्रिफला",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "medicines",
+                                "search"
+                            ],
+                            "query": [
+                                {
+                                    "key": "query",
+                                    "value": "त्रिफला"
+                                }
+                            ]
+                        },
+                        "description": "✅ Status: PASS (200)\n\nSearch by Marathi or English name"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Medicine",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name_mr\": \"अश्वगंधारिष्ट\",\n  \"name_en\": \"Ashwagandharishta\",\n  \"medicine_type\": \"arishta\",\n  \"price\": 250,\n  \"description\": \"Immunity booster\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/medicines/create",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "medicines",
+                                "create"
+                            ]
+                        },
+                        "description": "✅ Status: PASS (200)"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Dropdowns",
+            "item": [
+                {
+                    "name": "List Dropdown Categories",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/dropdowns/list?lang=en",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "dropdowns",
+                                "list"
+                            ],
+                            "query": [
+                                {
+                                    "key": "lang",
+                                    "value": "en"
+                                }
+                            ]
+                        },
+                        "description": "✅ Status: PASS (200)\n\nReturns 8 categories"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get All Dropdowns With Options ⭐ NEW",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/dropdowns/all-with-options?lang=en",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "dropdowns",
+                                "all-with-options"
+                            ],
+                            "query": [
+                                {
+                                    "key": "lang",
+                                    "value": "en",
+                                    "description": "Language: en or mr"
+                                }
+                            ]
+                        },
+                        "description": "✅ Status: PASS (200)\n\n⭐ **NEW COMPREHENSIVE API**\n\nReturns ALL dropdown categories WITH their options in a SINGLE call!\n\nNo need for multiple requests - get everything at once.\n\nResponse structure:\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"dropdowns\": [\n      {\n        \"dropdown_id\": \"...\",\n        \"dropdown_code\": \"purvrut\",\n        \"label\": \"Medical History\",\n        \"section_name\": \"History\",\n        \"options\": [\n          { \"value_code\": \"diabetes\", \"label\": \"Diabetes\" },\n          { \"value_code\": \"hypertension\", \"label\": \"Hypertension\" }\n        ]\n      }\n    ]\n  }\n}\n```"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Dropdown Options",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/dropdowns/purvrut/options?lang=en",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "dropdowns",
+                                "purvrut",
+                                "options"
+                            ],
+                            "query": [
+                                {
+                                    "key": "lang",
+                                    "value": "en"
+                                }
+                            ]
+                        },
+                        "description": "✅ Status: PASS (200)\n\nGet options for a specific category"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Dropdown Category ⭐ NEW",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"dropdown_code\": \"custom_category\",\n  \"label_mr\": \"कस्टम श्रेणी\",\n  \"label_en\": \"Custom Category\",\n  \"section_name\": \"Custom\",\n  \"input_type\": \"select\",\n  \"sort_order\": 10\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/dropdowns/category/create",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "dropdowns",
+                                "category",
+                                "create"
+                            ]
+                        },
+                        "description": "✅ Status: PASS (200)\n\n⭐ **NEW API**\n\nCreate a new dropdown category\n\nRequired fields:\n- dropdown_code (unique identifier)\n- label_mr (Marathi label)\n\nOptional:\n- label_en\n- section_name\n- input_type (default: select)\n- sort_order (default: 0)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Dropdown Option ⭐ NEW",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"dropdown_id\": \"<dropdown_id_here>\",\n  \"value_code\": \"custom_option\",\n  \"label_mr\": \"कस्टम पर्याय\",\n  \"label_en\": \"Custom Option\",\n  \"sort_order\": 10\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/dropdowns/option/create",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "dropdowns",
+                                "option",
+                                "create"
+                            ]
+                        },
+                        "description": "✅ Status: PASS (200)\n\n⭐ **NEW API**\n\nAdd an option to an existing dropdown category\n\n**IMPORTANT**: You need dropdown_id (not dropdown_code)\n\nTo get dropdown_id:\n1. Call GET /dropdowns/list\n2. Find your category\n3. Copy the dropdown_id\n\nRequired fields:\n- dropdown_id\n- value_code (unique within category)\n- label_mr"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Hospital Management",
+            "item": [
+                {
+                    "name": "Register Hospital",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"hospital_code\": \"HOSP_001\",\n  \"name\": \"Ayurmedi Clinic\",\n  \"address\": \"123 Main St\",\n  \"city\": \"Mumbai\",\n  \"state\": \"Maharashtra\",\n  \"country\": \"India\",\n  \"pincode\": \"400001\",\n  \"contact_number\": \"9876543210\",\n  \"email\": \"contact@clinic.com\",\n  \"admin_email\": \"admin@clinic.com\",\n  \"admin_password\": \"Admin@2026\",\n  \"admin_full_name\": \"Hospital Admin\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/hospital/register",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "hospital",
+                                "register"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ]
+}

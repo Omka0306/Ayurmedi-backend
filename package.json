@@ -5,6 +5,7 @@
   "main": "src/handlers/router.js",
   "scripts": {
     "bootstrap-super-admin": "node src/infrastructure/bootstrap-super-admin.js",
+    "seed-master-data": "node src/infrastructure/seed-master-data.js",
     "test-login": "node src/infrastructure/test-login.js",
     "diagnose": "node src/infrastructure/diagnose-system.js",
     "dev": "node src/infrastructure/local-server.js"
