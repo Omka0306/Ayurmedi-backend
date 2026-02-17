@@ -1,6 +1,6 @@
 const { v4: uuidv4 } = require('uuid');
 const { ROLES } = require('../constants/config');
-const { createHospital } = require('../persistence/hospital.repo');
+const { createHospital, getAllHospitals, getHospitalById, getHospitalByCode, updateHospital, deleteHospital } = require('../persistence/hospital.repo');
 const { createUser } = require('../persistence/user.repo');
 const { adminCreateUserWithPassword } = require('./cognito.service');
 const { AppError } = require('../utils/error.util');
@@ -9,10 +9,16 @@ const registerHospitalWithAdmin = async (payload) => {
   const {
     hospital_code,
     name,
+    email,
+    contact_number,
+    address,
+    city,
+    state,
+    country,
+    pincode,
     registration_no,
     type,
     owner_name,
-    email,
     website,
     subscription_plan,
     subscription_start,
@@ -30,16 +36,35 @@ const registerHospitalWithAdmin = async (payload) => {
     });
   }
 
+  // Check if hospital with same code already exists
+  const existingHospital = await getHospitalByCode(hospital_code);
+  if (existingHospital) {
+    throw new AppError(`Hospital with code '${hospital_code}' already exists`, {
+      statusCode: 409,
+      code: 'HOSPITAL_CODE_DUPLICATE',
+      details: {
+        existing_hospital_id: existingHospital.hospital_id,
+        existing_hospital_name: existingHospital.name,
+      },
+    });
+  }
+
   const hospitalId = uuidv4();
 
   const hospital = await createHospital({
     hospital_id: hospitalId,
     hospital_code,
     name,
+    email,
+    contact_number,
+    address,
+    city,
+    state,
+    country,
+    pincode,
     registration_no,
     type,
     owner_name,
-    email,
     website,
     subscription_plan,
     subscription_start,
@@ -74,7 +99,79 @@ const registerHospitalWithAdmin = async (payload) => {
   };
 };
 
+/**
+ * Get all hospitals with pagination
+ */
+const listAllHospitals = async (options = {}) => {
+  const result = await getAllHospitals(options);
+  return result;
+};
+
+/**
+ * Update hospital by ID
+ */
+const updateHospitalById = async (hospitalId, updates) => {
+  // Check if hospital exists
+  const existingHospital = await getHospitalById(hospitalId);
+  if (!existingHospital) {
+    throw new AppError('Hospital not found', {
+      statusCode: 404,
+      code: 'HOSPITAL_NOT_FOUND',
+    });
+  }
+
+  // Validate updates
+  if (updates.hospital_code) {
+    delete updates.hospital_code; // Don't allow changing hospital code
+  }
+
+  if (Object.keys(updates).length === 0) {
+    throw new AppError('No valid fields to update', {
+      statusCode: 400,
+      code: 'NO_VALID_FIELDS',
+    });
+  }
+
+  const updatedHospital = await updateHospital(hospitalId, updates);
+  return updatedHospital;
+};
+
+/**
+ * Delete hospital by ID (soft delete)
+ */
+const deleteHospitalById = async (hospitalId) => {
+  // Check if hospital exists
+  const existingHospital = await getHospitalById(hospitalId);
+  if (!existingHospital) {
+    throw new AppError('Hospital not found', {
+      statusCode: 404,
+      code: 'HOSPITAL_NOT_FOUND',
+    });
+  }
+
+  const deletedHospital = await deleteHospital(hospitalId);
+  return deletedHospital;
+};
+
+/**
+ * Get hospital by ID
+ */
+const getHospital = async (hospitalId) => {
+  const hospital = await getHospitalById(hospitalId);
+  if (!hospital) {
+    throw new AppError('Hospital not found', {
+      statusCode: 404,
+      code: 'HOSPITAL_NOT_FOUND',
+    });
+  }
+  return hospital;
+};
+
 module.exports = {
   registerHospitalWithAdmin,
+  listAllHospitals,
+  updateHospitalById,
+  deleteHospitalById,
+  getHospital,
 };
 

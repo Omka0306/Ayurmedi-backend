@@ -1,5 +1,12 @@
 const { ROLES } = require('../constants/config');
-const { createUser } = require('../persistence/user.repo');
+const {
+  createUser,
+  getAllUsers,
+  getUsersByHospital,
+  getUserById,
+  updateUser,
+  deleteUser,
+} = require('../persistence/user.repo');
 const { adminCreateUserWithPassword } = require('./cognito.service');
 const { AppError } = require('../utils/error.util');
 
@@ -39,7 +46,8 @@ const createHospitalUser = async (payload, context) => {
   });
 
   const user = await createUser({
-    cognito_user_id: cognitoUser.sub || cognitoUser.username,
+    user_id: undefined, // Let repo generate UUID
+    cognito_user_id: cognitoUser.User?.Username || cognitoUser.Username, 
     hospital_id,
     branch_id: branch_id || 'MAIN',
     full_name: full_name || email,
@@ -52,7 +60,57 @@ const createHospitalUser = async (payload, context) => {
   return user;
 };
 
+const listAllUsers = async (options = {}) => {
+  return getAllUsers(options);
+};
+
+const listHospitalUsers = async (hospitalId, options = {}) => {
+  return getUsersByHospital(hospitalId, options);
+};
+
+const getUser = async (userId) => {
+  const user = await getUserById(userId);
+  if (!user) {
+    throw new AppError('User not found', {
+      statusCode: 404,
+      code: 'USER_NOT_FOUND',
+    });
+  }
+  return user;
+};
+
+const updateUserById = async (userId, updates) => {
+  const existingUser = await getUserById(userId);
+  if (!existingUser) {
+    throw new AppError('User not found', {
+      statusCode: 404,
+      code: 'USER_NOT_FOUND',
+    });
+  }
+
+  const updatedUser = await updateUser(userId, updates);
+  return updatedUser;
+};
+
+const deleteUserById = async (userId) => {
+  const existingUser = await getUserById(userId);
+  if (!existingUser) {
+    throw new AppError('User not found', {
+      statusCode: 404,
+      code: 'USER_NOT_FOUND',
+    });
+  }
+
+  const deletedUser = await deleteUser(userId);
+  return deletedUser;
+};
+
 module.exports = {
   createHospitalUser,
+  listAllUsers,
+  listHospitalUsers,
+  getUser,
+  updateUserById,
+  deleteUserById,
 };
 

@@ -10,6 +10,25 @@ provider:
   memorySize: 256
   timeout: 10
 
+  httpApi:
+    cors:
+      allowedOrigins:
+        - '*'
+      allowedHeaders:
+        - Content-Type
+        - Authorization
+        - X-Amz-Date
+        - X-Api-Key
+        - X-Amz-Security-Token
+      allowedMethods:
+        - GET
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+        - OPTIONS
+      maxAge: 6000
+
   environment:
     STAGE: ${self:provider.stage}
     HOSPITALS_TABLE: ${self:service}-hospitals-${self:provider.stage}
@@ -20,6 +39,11 @@ provider:
     DISEASES_TABLE: ${self:service}-diseases-${self:provider.stage}
     TREATMENTS_TABLE: ${self:service}-treatments-${self:provider.stage}
     PRESCRIPTION_TEMPLATES_TABLE: ${self:service}-prescription-templates-${self:provider.stage}
+    PATIENTS_TABLE: ${self:service}-patients-${self:provider.stage}
+    VISITS_TABLE: ${self:service}-visits-${self:provider.stage}
+    PATIENT_HISTORIES_TABLE: ${self:service}-patient-histories-${self:provider.stage}
+    PRESCRIPTIONS_TABLE: ${self:service}-prescriptions-${self:provider.stage}
+    PRESCRIPTION_ITEMS_TABLE: ${self:service}-prescription-items-${self:provider.stage}
     USER_POOL_ID: !Ref AyurmediUserPool
     USER_POOL_CLIENT_ID: !Ref AyurmediUserPoolClient
 
@@ -42,6 +66,11 @@ provider:
             - !GetAtt DiseasesTable.Arn
             - !GetAtt TreatmentsTable.Arn
             - !GetAtt PrescriptionTemplatesTable.Arn
+            - !GetAtt PatientsTable.Arn
+            - !GetAtt VisitsTable.Arn
+            - !GetAtt PatientHistoriesTable.Arn
+            - !GetAtt PrescriptionsTable.Arn
+            - !GetAtt PrescriptionItemsTable.Arn
             - !Sub '${UsersTable.Arn}/index/*'
             - !Sub '${HospitalsTable.Arn}/index/*'
             - !Sub '${MedicinesTable.Arn}/index/*'
@@ -50,6 +79,11 @@ provider:
             - !Sub '${DiseasesTable.Arn}/index/*'
             - !Sub '${TreatmentsTable.Arn}/index/*'
             - !Sub '${PrescriptionTemplatesTable.Arn}/index/*'
+            - !Sub '${PatientsTable.Arn}/index/*'
+            - !Sub '${VisitsTable.Arn}/index/*'
+            - !Sub '${PatientHistoriesTable.Arn}/index/*'
+            - !Sub '${PrescriptionsTable.Arn}/index/*'
+            - !Sub '${PrescriptionItemsTable.Arn}/index/*'
         - Effect: Allow
           Action:
             - cognito-idp:AdminCreateUser
@@ -96,12 +130,75 @@ functions:
           method: POST
           path: /hospital/register
 
+  hospitalList:
+    handler: src/handlers/hospital.list
+    events:
+      - httpApi:
+          path: /hospitals/list
+          method: GET
+
+  hospitalGet:
+    handler: src/handlers/hospital.getById
+    events:
+      - httpApi:
+          path: /hospitals/{id}
+          method: GET
+
+  hospitalUpdate:
+    handler: src/handlers/hospital.update
+    events:
+      - httpApi:
+          path: /hospitals/{id}
+          method: PUT
+
+  hospitalDelete:
+    handler: src/handlers/hospital.delete
+    events:
+      - httpApi:
+          path: /hospitals/{id}
+          method: DELETE
+
   userCreate:
     handler: src/handlers/user.create
     events:
       - httpApi:
           method: POST
           path: /user/create
+
+  userList:
+    handler: src/handlers/user.list
+    events:
+      - httpApi:
+          method: GET
+          path: /users/list
+
+  userListByHospital:
+    handler: src/handlers/user.listByHospital
+    events:
+      - httpApi:
+          method: GET
+          path: /hospitals/{hospitalId}/users
+
+  userGet:
+    handler: src/handlers/user.getById
+    events:
+      - httpApi:
+          method: GET
+          path: /users/{id}
+
+  userUpdate:
+    handler: src/handlers/user.update
+    events:
+      - httpApi:
+          method: PUT
+          path: /users/{id}
+
+  userDelete:
+    handler: src/handlers/user.delete
+    events:
+      - httpApi:
+          method: DELETE
+          path: /users/{id}
 
   # Medicines APIs
   medicineCreate:
@@ -227,6 +324,122 @@ functions:
           method: GET
           path: /prescriptions/template/{id}
 
+  # Patient APIs
+  patientRegister:
+    handler: src/handlers/patient.register
+    events:
+      - httpApi:
+          method: POST
+          path: /patients/register
+
+  patientSearch:
+    handler: src/handlers/patient.search
+    events:
+      - httpApi:
+          method: GET
+          path: /patients/search
+
+  patientList:
+    handler: src/handlers/patient.list
+    events:
+      - httpApi:
+          method: GET
+          path: /patients/list
+
+  patientGetById:
+    handler: src/handlers/patient.getById
+    events:
+      - httpApi:
+          method: GET
+          path: /patients/{id}
+
+  # Visit APIs
+  visitCreate:
+    handler: src/handlers/visit.create
+    events:
+      - httpApi:
+          method: POST
+          path: /visits/create
+
+  visitQueue:
+    handler: src/handlers/visit.queue
+    events:
+      - httpApi:
+          method: GET
+          path: /visits/queue
+
+  visitGetById:
+    handler: src/handlers/visit.getById
+    events:
+      - httpApi:
+          method: GET
+          path: /visits/{id}
+
+  visitByPatient:
+    handler: src/handlers/visit.byPatient
+    events:
+      - httpApi:
+          method: GET
+          path: /visits/by-patient/{patient_id}
+
+  visitComplete:
+    handler: src/handlers/visit.complete
+    events:
+      - httpApi:
+          method: PATCH
+          path: /visits/{id}/complete
+
+  # Patient History APIs
+  visitSaveHistory:
+    handler: src/handlers/visit.saveHistory
+    events:
+      - httpApi:
+          method: POST
+          path: /visits/{id}/history
+
+  visitGetHistory:
+    handler: src/handlers/visit.getHistory
+    events:
+      - httpApi:
+          method: GET
+          path: /visits/{id}/history
+
+  # Prescription APIs
+  prescriptionCreate:
+    handler: src/handlers/visit-prescription.create
+    events:
+      - httpApi:
+          method: POST
+          path: /visits/{id}/prescription
+
+  prescriptionGet:
+    handler: src/handlers/visit-prescription.get
+    events:
+      - httpApi:
+          method: GET
+          path: /visits/{id}/prescription
+
+  prescriptionAddItem:
+    handler: src/handlers/visit-prescription.addItem
+    events:
+      - httpApi:
+          method: POST
+          path: /prescriptions/{id}/items
+
+  prescriptionRemoveItem:
+    handler: src/handlers/visit-prescription.removeItem
+    events:
+      - httpApi:
+          method: DELETE
+          path: /prescriptions/item/{item_id}
+
+  visitSummary:
+    handler: src/handlers/visit-prescription.summary
+    events:
+      - httpApi:
+          method: GET
+          path: /visits/{id}/summary
+
 resources:
   Resources:
     HospitalsTable:
@@ -260,6 +473,8 @@ resources:
             AttributeType: S
           - AttributeName: cognito_user_id
             AttributeType: S
+          - AttributeName: hospital_id
+            AttributeType: S
         KeySchema:
           - AttributeName: user_id
             KeyType: HASH
@@ -267,6 +482,12 @@ resources:
           - IndexName: cognito_user_id-index
             KeySchema:
               - AttributeName: cognito_user_id
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+          - IndexName: hospital_id-index
+            KeySchema:
+              - AttributeName: hospital_id
                 KeyType: HASH
             Projection:
               ProjectionType: ALL
@@ -440,6 +661,145 @@ resources:
             KeySchema:
               - AttributeName: disease_id
                 KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+
+    PatientsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.PATIENTS_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: patient_id
+            AttributeType: S
+          - AttributeName: hospital_id
+            AttributeType: S
+          - AttributeName: mobile
+            AttributeType: S
+          - AttributeName: full_name
+            AttributeType: S
+        KeySchema:
+          - AttributeName: patient_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: hospital-mobile-index
+            KeySchema:
+              - AttributeName: hospital_id
+                KeyType: HASH
+              - AttributeName: mobile
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+          - IndexName: hospital-name-index
+            KeySchema:
+              - AttributeName: hospital_id
+                KeyType: HASH
+              - AttributeName: full_name
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+
+    VisitsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.VISITS_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: visit_id
+            AttributeType: S
+          - AttributeName: hospital_id
+            AttributeType: S
+          - AttributeName: patient_id
+            AttributeType: S
+          - AttributeName: stage
+            AttributeType: S
+          - AttributeName: created_at
+            AttributeType: S
+        KeySchema:
+          - AttributeName: visit_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: hospital-stage-index
+            KeySchema:
+              - AttributeName: hospital_id
+                KeyType: HASH
+              - AttributeName: stage
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+          - IndexName: patient-created-index
+            KeySchema:
+              - AttributeName: patient_id
+                KeyType: HASH
+              - AttributeName: created_at
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+
+    PatientHistoriesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.PATIENT_HISTORIES_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: history_id
+            AttributeType: S
+          - AttributeName: visit_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: history_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: visit-history-index
+            KeySchema:
+              - AttributeName: visit_id
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+
+    PrescriptionsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.PRESCRIPTIONS_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: prescription_id
+            AttributeType: S
+          - AttributeName: visit_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: prescription_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: visit-prescription-index
+            KeySchema:
+              - AttributeName: visit_id
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+
+    PrescriptionItemsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.PRESCRIPTION_ITEMS_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: item_id
+            AttributeType: S
+          - AttributeName: prescription_id
+            AttributeType: S
+          - AttributeName: created_at
+            AttributeType: S
+        KeySchema:
+          - AttributeName: item_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: prescription-items-index
+            KeySchema:
+              - AttributeName: prescription_id
+                KeyType: HASH
+              - AttributeName: created_at
+                KeyType: RANGE
             Projection:
               ProjectionType: ALL
 
