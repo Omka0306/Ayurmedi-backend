@@ -1,12 +1,12 @@
 {
   "info": {
-    "name": "Ayurmedi Backend API",
-    "description": "Complete API collection for Ayurmedi Backend - Hospital Management System",
+    "name": "Ayurmedi Backend API - Complete Collection",
+    "description": "Complete API collection for Ayurmedi Backend - Hospital Management System\nIncludes: Auth, Hospital, Users, Master Data (Medicines, Dropdowns, Diseases, Treatments, Prescription Templates), and Patient Flow (Patients, Visits, History, Prescriptions)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
-      "name": "Authentication",
+      "name": "🔑 Authentication",
       "item": [
         {
           "name": "Login - Super Admin",
@@ -18,8 +18,9 @@
                   "if (pm.response.code === 200) {",
                   "    const response = pm.response.json();",
                   "    if (response.success && response.data.accessToken) {",
+                  "        pm.collectionVariables.set('authToken', response.data.accessToken);",
                   "        pm.collectionVariables.set('superAdminToken', response.data.accessToken);",
-                  "        console.log('Super Admin token saved');",
+                  "        console.log('Token saved');",
                   "    }",
                   "}"
                 ]
@@ -48,7 +49,7 @@
                 "login"
               ]
             },
-            "description": "Login with Super Admin credentials to get access token"
+            "description": "Login as Super Admin. Token is auto-saved."
           }
         },
         {
@@ -61,6 +62,7 @@
                   "if (pm.response.code === 200) {",
                   "    const response = pm.response.json();",
                   "    if (response.success && response.data.accessToken) {",
+                  "        pm.collectionVariables.set('authToken', response.data.accessToken);",
                   "        pm.collectionVariables.set('hospitalAdminToken', response.data.accessToken);",
                   "        console.log('Hospital Admin token saved');",
                   "    }",
@@ -79,7 +81,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"admin@hospital1.com\",\n  \"password\": \"HospitalAdmin@123\"\n}"
+              "raw": "{\n  \"email\": \"hospitaladmin@example.com\",\n  \"password\": \"Admin@2026\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/auth/login",
@@ -90,8 +92,50 @@
                 "auth",
                 "login"
               ]
+            }
+          }
+        },
+        {
+          "name": "Login - Doctor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data.accessToken) {",
+                  "        pm.collectionVariables.set('authToken', response.data.accessToken);",
+                  "        pm.collectionVariables.set('doctorToken', response.data.accessToken);",
+                  "        console.log('Doctor token saved');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"doctor@example.com\",\n  \"password\": \"Doctor@2026\"\n}"
             },
-            "description": "Login with Hospital Admin credentials"
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
           }
         },
         {
@@ -105,9 +149,13 @@
               },
               {
                 "key": "Authorization",
-                "value": "Bearer {{superAdminToken}}"
+                "value": "Bearer {{authToken}}"
               }
             ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
             "url": {
               "raw": "{{baseUrl}}/auth/logout",
               "host": [
@@ -158,7 +206,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"user@example.com\",\n  \"code\": \"123456\",\n  \"newPassword\": \"NewPassword@123\"\n}"
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"code\": \"123456\",\n  \"newPassword\": \"NewPassword@2026\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/auth/reset-password",
@@ -175,7 +223,7 @@
       ]
     },
     {
-      "name": "Hospital Management",
+      "name": "🏥 Hospital",
       "item": [
         {
           "name": "Register Hospital",
@@ -209,28 +257,44 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"hospital_code\": \"HOSP001\",\n  \"name\": \"Test Hospital\",\n  \"address\": \"123 Main Street\",\n  \"city\": \"Mumbai\",\n  \"state\": \"Maharashtra\",\n  \"country\": \"India\",\n  \"pincode\": \"400001\",\n  \"contact_number\": \"9876543210\",\n  \"email\": \"contact@hospital1.com\",\n  \"admin_email\": \"admin@hospital1.com\",\n  \"admin_password\": \"HospitalAdmin@123\",\n  \"admin_full_name\": \"Hospital Admin\"\n}"
+              "raw": "{\n  \"name\": \"Ayurveda Wellness Center\",\n  \"hospital_code\": \"AWC001\",\n  \"email\": \"info@awc.com\",\n  \"mobile\": \"9876543210\",\n  \"address\": \"123 Wellness St, Pune\",\n  \"admin_email\": \"admin@awc.com\",\n  \"admin_name\": \"Dr. Admin\",\n  \"admin_password\": \"Admin@2026\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/hospital/register",
+              "raw": "{{baseUrl}}/hospitals/register",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "hospital",
+                "hospitals",
                 "register"
               ]
             },
-            "description": "Register a new hospital (SUPER_ADMIN only)"
+            "description": "Register a new hospital. Requires SUPER_ADMIN token."
           }
         }
       ]
     },
     {
-      "name": "User Management",
+      "name": "👤 Users",
       "item": [
         {
-          "name": "Create User",
+          "name": "Create User (Doctor)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data?.user) {",
+                  "        pm.collectionVariables.set('doctorId', response.data.user.user_id);",
+                  "        console.log('Doctor ID saved:', response.data.user.user_id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
@@ -245,25 +309,84 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"full_name\": \"Dr. John Doe\",\n  \"email\": \"doctor1@hospital1.com\",\n  \"role\": \"DOCTOR\",\n  \"password\": \"Doctor@123\"\n}"
+              "raw": "{\n  \"full_name\": \"Dr. Rajesh Sharma\",\n  \"email\": \"dr.rajesh@awc.com\",\n  \"mobile\": \"9876543211\",\n  \"role\": \"DOCTOR\",\n  \"password\": \"Doctor@2026\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/user/create",
+              "raw": "{{baseUrl}}/users/create",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "user",
+                "users",
                 "create"
               ]
+            }
+          }
+        },
+        {
+          "name": "Create User (Reception)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hospitalAdminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Sneha Patil\",\n  \"email\": \"sneha@awc.com\",\n  \"mobile\": \"9876543212\",\n  \"role\": \"RECEPTION\",\n  \"password\": \"Reception@2026\"\n}"
             },
-            "description": "Create a new user (HOSPITAL_ADMIN only)"
+            "url": {
+              "raw": "{{baseUrl}}/users/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "create"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create User (Assistant)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hospitalAdminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Priya Assistant\",\n  \"email\": \"priya.asst@awc.com\",\n  \"mobile\": \"9876543213\",\n  \"role\": \"ASSISTANT\",\n  \"password\": \"Assistant@2026\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "create"
+              ]
+            }
           }
         }
       ]
     },
     {
-      "name": "Medicines",
+      "name": "💊 Medicines",
       "item": [
         {
           "name": "Create Medicine",
@@ -276,12 +399,12 @@
               },
               {
                 "key": "Authorization",
-                "value": "Bearer {{hospitalAdminToken}}"
+                "value": "Bearer {{authToken}}"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name_mr\": \"पॅरासिटामोल\",\n  \"name_en\": \"Paracetamol\",\n  \"medicine_type\": \"ALLOPATHY\",\n  \"description\": \"Pain relief and fever reducer\",\n  \"dosage_form\": \"Tablet\",\n  \"strength\": \"500mg\"\n}"
+              "raw": "{\n  \"name_mr\": \"अश्वगंधा चूर्ण\",\n  \"name_en\": \"Ashwagandha Churna\",\n  \"medicine_type\": \"churna\",\n  \"unit\": \"grams\",\n  \"description\": \"Ayurvedic stress-relief herb\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/medicines/create",
@@ -292,43 +415,7 @@
                 "medicines",
                 "create"
               ]
-            },
-            "description": "Create a new medicine"
-          }
-        },
-        {
-          "name": "List Medicines",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{hospitalAdminToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/medicines/list?medicine_type=ALLOPATHY&limit=50",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "medicines",
-                "list"
-              ],
-              "query": [
-                {
-                  "key": "medicine_type",
-                  "value": "ALLOPATHY",
-                  "description": "Optional: ALLOPATHY, AYURVEDIC, HOMEOPATHY"
-                },
-                {
-                  "key": "limit",
-                  "value": "50",
-                  "description": "Number of results"
-                }
-              ]
-            },
-            "description": "Get list of medicines for the hospital"
+            }
           }
         },
         {
@@ -338,11 +425,11 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{hospitalAdminToken}}"
+                "value": "Bearer {{authToken}}"
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/medicines/search?query=para",
+              "raw": "{{baseUrl}}/medicines/search?q=ashwagandha",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -352,57 +439,62 @@
               ],
               "query": [
                 {
-                  "key": "query",
-                  "value": "para",
-                  "description": "Search term"
+                  "key": "q",
+                  "value": "ashwagandha"
                 }
               ]
-            },
-            "description": "Search medicines by name (Marathi or English)"
+            }
           }
         },
         {
-          "name": "Update Medicine Status",
+          "name": "List Medicines",
           "request": {
-            "method": "PATCH",
+            "method": "GET",
             "header": [
               {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
                 "key": "Authorization",
-                "value": "Bearer {{hospitalAdminToken}}"
+                "value": "Bearer {{authToken}}"
               }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"is_active\": false\n}"
-            },
             "url": {
-              "raw": "{{baseUrl}}/medicines/:id/status",
+              "raw": "{{baseUrl}}/medicines/list",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "medicines",
-                ":id",
-                "status"
+                "list"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Medicines By Type",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/medicines/by-type",
+              "host": [
+                "{{baseUrl}}"
               ],
-              "variable": [
-                {
-                  "key": "id",
-                  "value": "medicine-id-here"
-                }
+              "path": [
+                "medicines",
+                "by-type"
               ]
             },
-            "description": "Activate or deactivate a medicine"
+            "description": "Returns all medicines grouped by type (churna, kashay, tail, etc.)"
           }
         }
       ]
     },
     {
-      "name": "Dropdowns",
+      "name": "📋 Dropdowns",
       "item": [
         {
           "name": "List Dropdowns",
@@ -411,7 +503,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{hospitalAdminToken}}"
+                "value": "Bearer {{authToken}}"
               }
             ],
             "url": {
@@ -423,45 +515,105 @@
                 "dropdowns",
                 "list"
               ]
-            },
-            "description": "Get all dropdown categories"
+            }
           }
         },
         {
-          "name": "Get Dropdown Options",
+          "name": "Get All Dropdowns With Options",
           "request": {
             "method": "GET",
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{hospitalAdminToken}}"
+                "value": "Bearer {{authToken}}"
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/dropdowns/:dropdown_code/options",
+              "raw": "{{baseUrl}}/dropdowns/all-with-options?lang=en",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "dropdowns",
-                ":dropdown_code",
-                "options"
+                "all-with-options"
               ],
-              "variable": [
+              "query": [
                 {
-                  "key": "dropdown_code",
-                  "value": "GENDER",
-                  "description": "Examples: GENDER, BLOOD_GROUP, MARITAL_STATUS"
+                  "key": "lang",
+                  "value": "en",
+                  "description": "Language: en or mr"
                 }
               ]
             },
-            "description": "Get options for a specific dropdown"
+            "description": "Returns all dropdown categories along with their options in one call. Used to populate history forms."
+          }
+        },
+        {
+          "name": "Create Dropdown Category",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dropdown_code\": \"purvrut\",\n  \"label_mr\": \"पूर्वरुत\",\n  \"label_en\": \"Previous History\",\n  \"section_name\": \"History\",\n  \"input_type\": \"multi_select\",\n  \"sort_order\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/dropdowns/category/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dropdowns",
+                "category",
+                "create"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Dropdown Option",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dropdown_code\": \"purvrut\",\n  \"value_code\": \"diabetes\",\n  \"label_mr\": \"मधुमेह\",\n  \"label_en\": \"Diabetes\",\n  \"sort_order\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/dropdowns/option/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dropdowns",
+                "option",
+                "create"
+              ]
+            }
           }
         }
       ]
     },
     {
-      "name": "Diseases",
+      "name": "🦠 Diseases",
       "item": [
         {
           "name": "Create Disease",
@@ -474,12 +626,12 @@
               },
               {
                 "key": "Authorization",
-                "value": "Bearer {{hospitalAdminToken}}"
+                "value": "Bearer {{authToken}}"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name_mr\": \"ताप\",\n  \"name_en\": \"Fever\",\n  \"description\": \"High body temperature\",\n  \"category\": \"COMMON\"\n}"
+              "raw": "{\n  \"name_mr\": \"आमवात\",\n  \"name_en\": \"Rheumatoid Arthritis\",\n  \"description\": \"Joint inflammation\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/diseases/create",
@@ -490,8 +642,7 @@
                 "diseases",
                 "create"
               ]
-            },
-            "description": "Create a new disease entry"
+            }
           }
         },
         {
@@ -501,32 +652,25 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{hospitalAdminToken}}"
+                "value": "Bearer {{authToken}}"
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/diseases/list?limit=50",
+              "raw": "{{baseUrl}}/diseases/list",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "diseases",
                 "list"
-              ],
-              "query": [
-                {
-                  "key": "limit",
-                  "value": "50"
-                }
               ]
-            },
-            "description": "Get list of diseases"
+            }
           }
         }
       ]
     },
     {
-      "name": "Treatments",
+      "name": "💉 Treatments",
       "item": [
         {
           "name": "Create Treatment",
@@ -539,12 +683,12 @@
               },
               {
                 "key": "Authorization",
-                "value": "Bearer {{hospitalAdminToken}}"
+                "value": "Bearer {{authToken}}"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"disease_id\": \"disease-id-here\",\n  \"name_mr\": \"उपचार\",\n  \"name_en\": \"Treatment\",\n  \"description\": \"Standard treatment protocol\",\n  \"treatment_type\": \"ALLOPATHY\"\n}"
+              "raw": "{\n  \"name_mr\": \"पंचकर्म\",\n  \"name_en\": \"Panchakarma\",\n  \"disease_id\": \"{{diseaseId}}\",\n  \"description\": \"Detox treatment\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/treatments/create",
@@ -555,47 +699,38 @@
                 "treatments",
                 "create"
               ]
-            },
-            "description": "Create a new treatment"
+            }
           }
         },
         {
-          "name": "List Treatments by Disease",
+          "name": "List Treatments",
           "request": {
             "method": "GET",
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{hospitalAdminToken}}"
+                "value": "Bearer {{authToken}}"
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/treatments/by-disease/:disease_id",
+              "raw": "{{baseUrl}}/treatments/list",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "treatments",
-                "by-disease",
-                ":disease_id"
-              ],
-              "variable": [
-                {
-                  "key": "disease_id",
-                  "value": "disease-id-here"
-                }
+                "list"
               ]
-            },
-            "description": "Get all treatments for a specific disease"
+            }
           }
         }
       ]
     },
     {
-      "name": "Prescription Templates",
+      "name": "📄 Prescription Templates",
       "item": [
         {
-          "name": "Create Prescription Template",
+          "name": "Create Template",
           "request": {
             "method": "POST",
             "header": [
@@ -605,12 +740,12 @@
               },
               {
                 "key": "Authorization",
-                "value": "Bearer {{hospitalAdminToken}}"
+                "value": "Bearer {{authToken}}"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"disease_id\": \"disease-id-here\",\n  \"template_name\": \"Fever Treatment Protocol\",\n  \"medicines\": [\n    {\n      \"medicine_id\": \"medicine-id-1\",\n      \"dosage\": \"1 tablet\",\n      \"frequency\": \"Twice daily\",\n      \"duration\": \"5 days\",\n      \"instructions_mr\": \"जेवणानंतर\",\n      \"instructions_en\": \"After meals\"\n    }\n  ],\n  \"general_instructions_mr\": \"भरपूर पाणी प्या\",\n  \"general_instructions_en\": \"Drink plenty of water\"\n}"
+              "raw": "{\n  \"disease_id\": \"{{diseaseId}}\",\n  \"medicines\": [\n    {\n      \"medicine_id\": \"{{medicineId}}\",\n      \"dose\": \"1-0-1\",\n      \"timing\": \"After Food\",\n      \"duration_days\": 7\n    }\n  ],\n  \"instructions_mr\": \"उबदार पाणी प्या\",\n  \"instructions_en\": \"Drink warm water\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/prescriptions/template/create",
@@ -622,22 +757,21 @@
                 "template",
                 "create"
               ]
-            },
-            "description": "Create a prescription template for a disease"
+            }
           }
         },
         {
-          "name": "List Prescription Templates",
+          "name": "List Templates",
           "request": {
             "method": "GET",
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{hospitalAdminToken}}"
+                "value": "Bearer {{authToken}}"
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/prescriptions/templates/list?disease_id=disease-id-here",
+              "raw": "{{baseUrl}}/prescriptions/templates/list",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -645,46 +779,614 @@
                 "prescriptions",
                 "templates",
                 "list"
-              ],
-              "query": [
-                {
-                  "key": "disease_id",
-                  "value": "disease-id-here",
-                  "description": "Optional: filter by disease"
-                }
               ]
-            },
-            "description": "Get all prescription templates"
+            }
           }
         },
         {
-          "name": "Get Prescription Template",
+          "name": "Get Template by ID",
           "request": {
             "method": "GET",
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{hospitalAdminToken}}"
+                "value": "Bearer {{authToken}}"
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/prescriptions/template/:id",
+              "raw": "{{baseUrl}}/prescriptions/template/{{templateId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "prescriptions",
                 "template",
-                ":id"
+                "{{templateId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🧑‍⚕️ Patients  [Phase 3]",
+      "description": "Patient registration and search.\nRole: RECEPTION, DOCTOR, SUPER_ADMIN",
+      "item": [
+        {
+          "name": "Register Patient",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data?.patient?.patient_id) {",
+                  "        pm.collectionVariables.set('patientId', response.data.patient.patient_id);",
+                  "        console.log('Patient ID saved:', response.data.patient.patient_id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Ramesh Patil\",\n  \"mobile\": \"9876543299\",\n  \"gender\": \"Male\",\n  \"dob\": \"1985-06-15\",\n  \"address\": \"456 Village Rd, Nashik\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/patients/register",
+              "host": [
+                "{{baseUrl}}"
               ],
-              "variable": [
+              "path": [
+                "patients",
+                "register"
+              ]
+            },
+            "description": "Register a new patient. Mobile number must be unique per hospital."
+          }
+        },
+        {
+          "name": "Search Patient by Mobile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/patients/search?mobile=9876543299",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "patients",
+                "search"
+              ],
+              "query": [
                 {
-                  "key": "id",
-                  "value": "template-id-here"
+                  "key": "mobile",
+                  "value": "9876543299",
+                  "description": "Mobile or name search"
                 }
               ]
             },
-            "description": "Get a specific prescription template by ID"
+            "description": "Search patients by mobile number or name."
+          }
+        },
+        {
+          "name": "List Patients",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/patients/list?limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "patients",
+                "list"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Patient by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/patients/{{patientId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "patients",
+                "{{patientId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📅 Visits  [Phase 3]",
+      "description": "OPD Visit management with queue and stage tracking.\nStages: WAITING_FOR_HISTORY → READY_FOR_DOCTOR → READY_FOR_BILLING\nRole: RECEPTION, DOCTOR, SUPER_ADMIN",
+      "item": [
+        {
+          "name": "Create Visit",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data?.visit?.visit_id) {",
+                  "        pm.collectionVariables.set('visitId', response.data.visit.visit_id);",
+                  "        console.log('Visit ID saved:', response.data.visit.visit_id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patient_id\": \"{{patientId}}\",\n  \"visit_date\": \"2026-03-01\",\n  \"visit_time\": \"10:30\",\n  \"weight\": 72,\n  \"current_illness\": \"Fever and body ache\",\n  \"doctor_id\": null\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/visits/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "visits",
+                "create"
+              ]
+            },
+            "description": "Create OPD Visit. doctor_id is OPTIONAL. Sets status=OPEN, stage=WAITING_FOR_HISTORY."
+          }
+        },
+        {
+          "name": "Get Queue - Waiting for History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/visits/queue?stage=WAITING_FOR_HISTORY",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "visits",
+                "queue"
+              ],
+              "query": [
+                {
+                  "key": "stage",
+                  "value": "WAITING_FOR_HISTORY"
+                }
+              ]
+            },
+            "description": "Get all OPEN visits at WAITING_FOR_HISTORY stage."
+          }
+        },
+        {
+          "name": "Get Queue - Ready for Doctor",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/visits/queue?stage=READY_FOR_DOCTOR",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "visits",
+                "queue"
+              ],
+              "query": [
+                {
+                  "key": "stage",
+                  "value": "READY_FOR_DOCTOR"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Queue - Ready for Billing",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/visits/queue?stage=READY_FOR_BILLING",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "visits",
+                "queue"
+              ],
+              "query": [
+                {
+                  "key": "stage",
+                  "value": "READY_FOR_BILLING"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Visit by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/visits/{{visitId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "visits",
+                "{{visitId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Visits by Patient",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/visits/by-patient/{{patientId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "visits",
+                "by-patient",
+                "{{patientId}}"
+              ]
+            },
+            "description": "Get all visits for a specific patient."
+          }
+        },
+        {
+          "name": "Complete Visit",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/visits/{{visitId}}/complete",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "visits",
+                "{{visitId}}",
+                "complete"
+              ]
+            },
+            "description": "Mark a visit as COMPLETED. Role: DOCTOR."
+          }
+        }
+      ]
+    },
+    {
+      "name": "📝 Patient History  [Phase 3]",
+      "description": "Patient medical history per visit.\nONE history per visit (overwrite allowed).\nRole: ASSISTANT, DOCTOR, SUPER_ADMIN",
+      "item": [
+        {
+          "name": "Save Patient History",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"purvrut\": [\"Diabetes\", \"Hypertension\"],\n  \"artava\": \"Regular\",\n  \"bowel\": \"Regular\",\n  \"appetite\": \"Good\",\n  \"sleep\": \"Normal\",\n  \"urine\": \"Normal\",\n  \"prakriti\": \"Vata-Pitta\",\n  \"chief_complaint\": \"Fever since 3 days\",\n  \"duration\": \"3 days\",\n  \"family_history\": \"Father has diabetes\",\n  \"allergies\": \"None\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/visits/{{visitId}}/history",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "visits",
+                "{{visitId}}",
+                "history"
+              ]
+            },
+            "description": "Saves patient history for a visit. Overwrites if called again. Auto-updates stage to READY_FOR_DOCTOR."
+          }
+        },
+        {
+          "name": "Get Patient History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/visits/{{visitId}}/history",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "visits",
+                "{{visitId}}",
+                "history"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "💊 Prescriptions  [Phase 3]",
+      "description": "Patient prescriptions and medicine items.\nONE prescription per visit.\nRole: DOCTOR, SUPER_ADMIN (for create/modify)",
+      "item": [
+        {
+          "name": "Create Prescription",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data?.prescription?.prescription_id) {",
+                  "        pm.collectionVariables.set('prescriptionId', response.data.prescription.prescription_id);",
+                  "        console.log('Prescription ID saved:', response.data.prescription.prescription_id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Take rest, drink warm water, avoid oily food.\",\n  \"follow_up_date\": \"2026-03-08\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/visits/{{visitId}}/prescription",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "visits",
+                "{{visitId}}",
+                "prescription"
+              ]
+            },
+            "description": "Create prescription for a visit. Only ONE prescription per visit allowed. Auto-updates stage to READY_FOR_BILLING."
+          }
+        },
+        {
+          "name": "Get Prescription",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/visits/{{visitId}}/prescription",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "visits",
+                "{{visitId}}",
+                "prescription"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Add Medicine Item",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data?.item?.item_id) {",
+                  "        pm.collectionVariables.set('prescriptionItemId', response.data.item.item_id);",
+                  "        console.log('Item ID saved:', response.data.item.item_id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"medicine_id\": \"{{medicineId}}\",\n  \"dose\": \"1-0-1\",\n  \"timing\": \"After Food\",\n  \"duration_days\": 5,\n  \"quantity\": 10,\n  \"instructions\": \"Take with warm milk\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/prescriptions/{{prescriptionId}}/items",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "prescriptions",
+                "{{prescriptionId}}",
+                "items"
+              ]
+            },
+            "description": "Add a medicine to the prescription."
+          }
+        },
+        {
+          "name": "Remove Medicine Item",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/prescriptions/item/{{prescriptionItemId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "prescriptions",
+                "item",
+                "{{prescriptionItemId}}"
+              ]
+            },
+            "description": "Remove a medicine from the prescription."
+          }
+        },
+        {
+          "name": "Get Visit Full Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/visits/{{visitId}}/summary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "visits",
+                "{{visitId}}",
+                "summary"
+              ]
+            },
+            "description": "Returns complete visit info: patient + visit + history + prescription + items in one call."
           }
         }
       ]
@@ -695,25 +1397,79 @@
       "key": "baseUrl",
       "value": "https://m6y68bub70.execute-api.ap-south-1.amazonaws.com",
       "type": "string",
-      "description": "AWS API Gateway endpoint"
+      "description": "AWS API Gateway base URL"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string",
+      "description": "Current user token (auto-saved on login)"
     },
     {
       "key": "superAdminToken",
       "value": "",
-      "type": "string",
-      "description": "Super Admin access token (auto-saved after login)"
+      "type": "string"
     },
     {
       "key": "hospitalAdminToken",
       "value": "",
-      "type": "string",
-      "description": "Hospital Admin access token (auto-saved after login)"
+      "type": "string"
+    },
+    {
+      "key": "doctorToken",
+      "value": "",
+      "type": "string"
     },
     {
       "key": "hospitalId",
       "value": "",
       "type": "string",
       "description": "Hospital ID (auto-saved after hospital registration)"
+    },
+    {
+      "key": "patientId",
+      "value": "",
+      "type": "string",
+      "description": "Patient ID (auto-saved after registration)"
+    },
+    {
+      "key": "visitId",
+      "value": "",
+      "type": "string",
+      "description": "Visit ID (auto-saved after visit creation)"
+    },
+    {
+      "key": "prescriptionId",
+      "value": "",
+      "type": "string",
+      "description": "Prescription ID (auto-saved after prescription creation)"
+    },
+    {
+      "key": "prescriptionItemId",
+      "value": "",
+      "type": "string",
+      "description": "Prescription Item ID (auto-saved after adding medicine)"
+    },
+    {
+      "key": "medicineId",
+      "value": "",
+      "type": "string",
+      "description": "Medicine ID to use in prescriptions"
+    },
+    {
+      "key": "doctorId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "templateId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "diseaseId",
+      "value": "",
+      "type": "string"
     }
   ]
 }
