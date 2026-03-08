@@ -44,6 +44,12 @@ provider:
     PATIENT_HISTORIES_TABLE: ${self:service}-patient-histories-${self:provider.stage}
     PRESCRIPTIONS_TABLE: ${self:service}-prescriptions-${self:provider.stage}
     PRESCRIPTION_ITEMS_TABLE: ${self:service}-prescription-items-${self:provider.stage}
+    FORM_FIELDS_TABLE: ${self:service}-form-fields-${self:provider.stage}
+    BILLING_TABLE: ${self:service}-billing-${self:provider.stage}
+    INVENTORY_TABLE: ${self:service}-inventory-${self:provider.stage}
+    APPOINTMENTS_TABLE: ${self:service}-appointments-${self:provider.stage}
+    IPD_ADMISSIONS_TABLE: ${self:service}-ipd-admissions-${self:provider.stage}
+    PANCHAKARMA_PLANS_TABLE: ${self:service}-panchakarma-plans-${self:provider.stage}
     USER_POOL_ID: !Ref AyurmediUserPool
     USER_POOL_CLIENT_ID: !Ref AyurmediUserPoolClient
 
@@ -71,6 +77,7 @@ provider:
             - !GetAtt PatientHistoriesTable.Arn
             - !GetAtt PrescriptionsTable.Arn
             - !GetAtt PrescriptionItemsTable.Arn
+            - !GetAtt FormFieldsTable.Arn
             - !Sub '${UsersTable.Arn}/index/*'
             - !Sub '${HospitalsTable.Arn}/index/*'
             - !Sub '${MedicinesTable.Arn}/index/*'
@@ -84,6 +91,17 @@ provider:
             - !Sub '${PatientHistoriesTable.Arn}/index/*'
             - !Sub '${PrescriptionsTable.Arn}/index/*'
             - !Sub '${PrescriptionItemsTable.Arn}/index/*'
+            - !GetAtt BillingTable.Arn
+            - !GetAtt InventoryTable.Arn
+            - !Sub '${BillingTable.Arn}/index/*'
+            - !Sub '${InventoryTable.Arn}/index/*'
+            - !GetAtt IpdAdmissionsTable.Arn
+            - !GetAtt PanchakarmaPlansTable.Arn
+            - !GetAtt AppointmentsTable.Arn
+            - !Sub '${IpdAdmissionsTable.Arn}/index/*'
+            - !Sub '${PanchakarmaPlansTable.Arn}/index/*'
+            - !Sub '${AppointmentsTable.Arn}/index/*'
+            - !Sub '${FormFieldsTable.Arn}/index/*'
         - Effect: Allow
           Action:
             - cognito-idp:AdminCreateUser
@@ -93,6 +111,15 @@ provider:
             - cognito-idp:ForgotPassword
             - cognito-idp:ConfirmForgotPassword
           Resource: '*'
+
+plugins:
+  - serverless-plugin-split-stacks
+
+custom:
+  splitStacks:
+    perFunction: false
+    perType: true
+    perGroupFunction: false
 
 functions:
   authLogin:
@@ -439,6 +466,252 @@ functions:
       - httpApi:
           method: GET
           path: /visits/{id}/summary
+
+  # Billing APIs
+  billingCreate:
+    handler: src/handlers/billing.handler.create
+    events:
+      - httpApi:
+          method: POST
+          path: /visits/{id}/bill
+
+  billingGetById:
+    handler: src/handlers/billing.handler.getById
+    events:
+      - httpApi:
+          method: GET
+          path: /billing/{id}
+
+  billingGetByVisit:
+    handler: src/handlers/billing.handler.getByVisit
+    events:
+      - httpApi:
+          method: GET
+          path: /visits/{id}/bill
+
+  billingPay:
+    handler: src/handlers/billing.handler.pay
+    events:
+      - httpApi:
+          method: POST
+          path: /billing/{id}/pay
+
+  billingList:
+    handler: src/handlers/billing.handler.list
+    events:
+      - httpApi:
+          method: GET
+          path: /billing/list
+
+  billingListByPatient:
+    handler: src/handlers/billing.handler.listByPatient
+    events:
+      - httpApi:
+          method: GET
+          path: /billing/by-patient/{patient_id}
+
+  # Inventory APIs
+  inventoryStockIn:
+    handler: src/handlers/inventory.handler.stockIn
+    events:
+      - httpApi:
+          method: POST
+          path: /inventory/stock-in
+
+  inventoryList:
+    handler: src/handlers/inventory.handler.list
+    events:
+      - httpApi:
+          method: GET
+          path: /inventory/list
+
+  inventoryLowStock:
+    handler: src/handlers/inventory.handler.lowStock
+    events:
+      - httpApi:
+          method: GET
+          path: /inventory/low-stock
+
+  inventoryGetByMedicine:
+    handler: src/handlers/inventory.handler.getByMedicine
+    events:
+      - httpApi:
+          method: GET
+          path: /inventory/medicine/{medicine_id}
+
+  inventoryAdjust:
+    handler: src/handlers/inventory.handler.adjust
+    events:
+      - httpApi:
+          method: PATCH
+          path: /inventory/{inventory_id}/adjust
+
+  # Report APIs
+  reportVisit:
+    handler: src/handlers/report.handler.visitReport
+    events:
+      - httpApi:
+          method: GET
+          path: /visits/{id}/report
+
+  reportPatientHistory:
+    handler: src/handlers/report.handler.patientHistoryReport
+    events:
+      - httpApi:
+          method: GET
+          path: /patients/{id}/history-report
+
+  # Appointment APIs
+  appointmentBook:
+    handler: src/handlers/appointments.handler.book
+    events:
+      - httpApi:
+          method: POST
+          path: /appointments/book
+
+  appointmentGetById:
+    handler: src/handlers/appointments.handler.getById
+    events:
+      - httpApi:
+          method: GET
+          path: /appointments/{id}
+
+  appointmentList:
+    handler: src/handlers/appointments.handler.list
+    events:
+      - httpApi:
+          method: GET
+          path: /appointments/list
+
+  appointmentListByPatient:
+    handler: src/handlers/appointments.handler.listByPatient
+    events:
+      - httpApi:
+          method: GET
+          path: /appointments/by-patient/{patient_id}
+
+  appointmentUpdateStatus:
+    handler: src/handlers/appointments.handler.updateStatus
+    events:
+      - httpApi:
+          method: PATCH
+          path: /appointments/{id}/status
+
+  # IPD (Inpatient Department) APIs
+  ipdAdmit:
+    handler: src/handlers/ipd.handler.admit
+    events:
+      - httpApi:
+          method: POST
+          path: /ipd/admit
+
+  ipdGetById:
+    handler: src/handlers/ipd.handler.getById
+    events:
+      - httpApi:
+          method: GET
+          path: /ipd/{ipd_id}
+
+  ipdList:
+    handler: src/handlers/ipd.handler.list
+    events:
+      - httpApi:
+          method: GET
+          path: /ipd/list
+
+  ipdListByPatient:
+    handler: src/handlers/ipd.handler.listByPatient
+    events:
+      - httpApi:
+          method: GET
+          path: /ipd/by-patient/{patient_id}
+
+  ipdAddNote:
+    handler: src/handlers/ipd.handler.addNote
+    events:
+      - httpApi:
+          method: POST
+          path: /ipd/{ipd_id}/note
+
+  ipdDischarge:
+    handler: src/handlers/ipd.handler.discharge
+    events:
+      - httpApi:
+          method: PATCH
+          path: /ipd/{ipd_id}/discharge
+
+  # Panchakarma Treatment APIs
+  panchakarmaCreatePlan:
+    handler: src/handlers/panchakarma.handler.createPlan
+    events:
+      - httpApi:
+          method: POST
+          path: /panchakarma/plan
+
+  panchakarmaGetPlan:
+    handler: src/handlers/panchakarma.handler.getPlan
+    events:
+      - httpApi:
+          method: GET
+          path: /panchakarma/{plan_id}
+
+  panchakarmaList:
+    handler: src/handlers/panchakarma.handler.list
+    events:
+      - httpApi:
+          method: GET
+          path: /panchakarma/list
+
+  panchakarmaListByPatient:
+    handler: src/handlers/panchakarma.handler.listByPatient
+    events:
+      - httpApi:
+          method: GET
+          path: /panchakarma/by-patient/{patient_id}
+
+  panchakarmaAddSession:
+    handler: src/handlers/panchakarma.handler.addSession
+    events:
+      - httpApi:
+          method: POST
+          path: /panchakarma/{plan_id}/session
+
+  panchakarmaComplete:
+    handler: src/handlers/panchakarma.handler.completePlan
+    events:
+      - httpApi:
+          method: PATCH
+          path: /panchakarma/{plan_id}/complete
+
+  # ─── Form Fields (Dynamic Form Schema) ───────────────────────────
+  formGetSchema:
+    handler: src/handlers/form.getSchema
+    events:
+      - httpApi:
+          method: GET
+          path: /forms/schema
+
+  formUpsertField:
+    handler: src/handlers/form.upsertField
+    events:
+      - httpApi:
+          method: POST
+          path: /forms/fields/upsert
+
+  formToggleField:
+    handler: src/handlers/form.toggleField
+    events:
+      - httpApi:
+          method: PATCH
+          path: /forms/fields/{field_id}/toggle
+
+  formListFields:
+    handler: src/handlers/form.listFields
+    events:
+      - httpApi:
+          method: GET
+          path: /forms/fields
+
 
 resources:
   Resources:
@@ -800,6 +1073,198 @@ resources:
                 KeyType: HASH
               - AttributeName: created_at
                 KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+
+    FormFieldsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.FORM_FIELDS_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: field_id
+            AttributeType: S
+          - AttributeName: hospital_id
+            AttributeType: S
+          - AttributeName: form_type
+            AttributeType: S
+        KeySchema:
+          - AttributeName: field_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: hospital-form-index
+            KeySchema:
+              - AttributeName: hospital_id
+                KeyType: HASH
+              - AttributeName: form_type
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+
+    BillingTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.BILLING_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: bill_id
+            AttributeType: S
+          - AttributeName: visit_id
+            AttributeType: S
+          - AttributeName: hospital_id
+            AttributeType: S
+          - AttributeName: patient_id
+            AttributeType: S
+          - AttributeName: created_at
+            AttributeType: S
+        KeySchema:
+          - AttributeName: bill_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: visit-bill-index
+            KeySchema:
+              - AttributeName: visit_id
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+          - IndexName: hospital-bill-index
+            KeySchema:
+              - AttributeName: hospital_id
+                KeyType: HASH
+              - AttributeName: created_at
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+          - IndexName: patient-bill-index
+            KeySchema:
+              - AttributeName: patient_id
+                KeyType: HASH
+              - AttributeName: created_at
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+
+    InventoryTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.INVENTORY_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: inventory_id
+            AttributeType: S
+          - AttributeName: hospital_id
+            AttributeType: S
+          - AttributeName: medicine_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: inventory_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: hospital-medicine-index
+            KeySchema:
+              - AttributeName: hospital_id
+                KeyType: HASH
+              - AttributeName: medicine_id
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+          - IndexName: hospital-inventory-index
+            KeySchema:
+              - AttributeName: hospital_id
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+
+    AppointmentsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.APPOINTMENTS_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: appointment_id
+            AttributeType: S
+          - AttributeName: hospital_id
+            AttributeType: S
+          - AttributeName: appointment_date
+            AttributeType: S
+          - AttributeName: patient_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: appointment_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: hospital-date-index
+            KeySchema:
+              - AttributeName: hospital_id
+                KeyType: HASH
+              - AttributeName: appointment_date
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+          - IndexName: patient-appointment-index
+            KeySchema:
+              - AttributeName: patient_id
+                KeyType: HASH
+              - AttributeName: appointment_date
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+
+    IpdAdmissionsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.IPD_ADMISSIONS_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: ipd_id
+            AttributeType: S
+          - AttributeName: hospital_id
+            AttributeType: S
+          - AttributeName: patient_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: ipd_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: hospital-ipd-index
+            KeySchema:
+              - AttributeName: hospital_id
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+          - IndexName: patient-ipd-index
+            KeySchema:
+              - AttributeName: patient_id
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+
+    PanchakarmaPlansTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.PANCHAKARMA_PLANS_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: plan_id
+            AttributeType: S
+          - AttributeName: hospital_id
+            AttributeType: S
+          - AttributeName: patient_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: plan_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: hospital-pk-index
+            KeySchema:
+              - AttributeName: hospital_id
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+          - IndexName: patient-pk-index
+            KeySchema:
+              - AttributeName: patient_id
+                KeyType: HASH
             Projection:
               ProjectionType: ALL
 

@@ -56,6 +56,48 @@
             "value": "",
             "type": "string",
             "description": "Set manually with a medicine ID"
+        },
+        {
+            "key": "formFieldId",
+            "value": "",
+            "type": "string",
+            "description": "Saved automatically after upsert form field"
+        },
+        {
+            "key": "targetHospitalId",
+            "value": "08c9e335-1a00-4db3-930f-9-bbdc800eb55a",
+            "type": "string",
+            "description": "test5Hospital - pre-configured with Ayurvedic form fields"
+        },
+        {
+            "key": "bill-id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "inv-id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "app-id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "ipd-id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "plan-id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "doctorId",
+            "value": "",
+            "type": "string"
         }
     ],
     "item": [
@@ -169,6 +211,7 @@
                                     "    if (response.success && response.data.accessToken) {",
                                     "        pm.collectionVariables.set('authToken', response.data.accessToken);",
                                     "        console.log('Doctor token saved');",
+                                    "        if (response.data.user && response.data.user.id) pm.collectionVariables.set('doctorId', response.data.user.id);",
                                     "    }",
                                     "}"
                                 ],
@@ -345,7 +388,24 @@
                             ]
                         }
                     },
-                    "response": []
+                    "response": [],
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    const response = pm.response.json();",
+                                    "    if (response.data && response.data.items && response.data.items.length > 0) {",
+                                    "        pm.collectionVariables.set('medicineId', response.data.items[0].medicine_id);",
+                                    "        console.log('medicineId saved');",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ]
                 },
                 {
                     "name": "List Medicines",
@@ -1410,6 +1470,912 @@
                         "description": "Returns complete visit info in one call:\n• Patient details\n• Visit info + stage\n• Patient history\n• Prescription\n• All prescription items (medicines)"
                     },
                     "response": []
+                }
+            ]
+        },
+        {
+            "name": "🏗️ Form Fields Schema [Dynamic Forms]",
+            "description": "Dynamic form schema API.\n\nHow it works:\n• GLOBAL fields = default for all hospitals\n• Hospital-specific = overrides/additions for one hospital\n• GET /forms/schema merges both layers\n\nTarget Hospital (pre-configured):\n  ID: {{targetHospitalId}}\n  Name: test5Hospital (Ayurvedic)\n\nForm Types: RECEPTION | HISTORY | PRESCRIPTION",
+            "item": [
+                {
+                    "name": "GET Reception Schema (English)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/forms/schema?form_type=RECEPTION&lang=en",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "forms",
+                                "schema"
+                            ],
+                            "query": [
+                                {
+                                    "key": "form_type",
+                                    "value": "RECEPTION",
+                                    "description": "RECEPTION | HISTORY | PRESCRIPTION"
+                                },
+                                {
+                                    "key": "lang",
+                                    "value": "en",
+                                    "description": "en = English, mr = Marathi"
+                                }
+                            ]
+                        },
+                        "description": "Get RECEPTION form schema for this hospital (English labels).\n\nReturns 17+ common fields grouped by section.\n\n✅ Role: All authenticated roles"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "GET Reception Schema (Marathi)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/forms/schema?form_type=RECEPTION&lang=mr",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "forms",
+                                "schema"
+                            ],
+                            "query": [
+                                {
+                                    "key": "form_type",
+                                    "value": "RECEPTION"
+                                },
+                                {
+                                    "key": "lang",
+                                    "value": "mr"
+                                }
+                            ]
+                        },
+                        "description": "Same schema but all labels returned in Marathi (मराठी).\n\n✅ Role: All authenticated roles"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "GET Ayurvedic History Schema (English)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/forms/schema?form_type=HISTORY&lang=en",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "forms",
+                                "schema"
+                            ],
+                            "query": [
+                                {
+                                    "key": "form_type",
+                                    "value": "HISTORY"
+                                },
+                                {
+                                    "key": "lang",
+                                    "value": "en"
+                                }
+                            ]
+                        },
+                        "description": "Get complete Ayurvedic patient history form schema.\n\n13 Sections from the physical case paper:\n1. Chief Complaint (प्रधान वेदना)\n2. Current Medicines\n3. Previous History (पूर्वरुत) - 25 disease options\n4. Family History + Lineage\n5. Daily Routine (दिनचर्या)\n6. Diet (आहार) - detailed food categories\n7. Bowel Habits (मलप्रवृत्ती)\n8. Urination (मूत्रप्रवृत्ती)\n9. Perspiration (स्वेदप्रवृत्ती)\n10. Menstrual History (राजःप्रवृत्ती)\n11. Mental Status & Stress\n12. Sleep (निद्रा)\n13. Addictions (नशासंबंधी)\n\n✅ Role: All authenticated roles"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "GET Ayurvedic History Schema (Marathi)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/forms/schema?form_type=HISTORY&lang=mr",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "forms",
+                                "schema"
+                            ],
+                            "query": [
+                                {
+                                    "key": "form_type",
+                                    "value": "HISTORY"
+                                },
+                                {
+                                    "key": "lang",
+                                    "value": "mr"
+                                }
+                            ]
+                        },
+                        "description": "All 13 sections with Marathi labels — ready to render the physical case paper form in the app."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Admin: List Fields for Hospital (GLOBAL)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/forms/fields?form_type=HISTORY&hospital_id=GLOBAL",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "forms",
+                                "fields"
+                            ],
+                            "query": [
+                                {
+                                    "key": "form_type",
+                                    "value": "HISTORY"
+                                },
+                                {
+                                    "key": "hospital_id",
+                                    "value": "GLOBAL",
+                                    "description": "GLOBAL or a specific hospital_id"
+                                }
+                            ]
+                        },
+                        "description": "Admin management view — list all raw fields for GLOBAL HISTORY form (unmerged, flat list).\n\n✅ Role: Hospital Admin, Super Admin"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Admin: List Fields for Specific Hospital",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/forms/fields?form_type=HISTORY&hospital_id={{targetHospitalId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "forms",
+                                "fields"
+                            ],
+                            "query": [
+                                {
+                                    "key": "form_type",
+                                    "value": "HISTORY"
+                                },
+                                {
+                                    "key": "hospital_id",
+                                    "value": "{{targetHospitalId}}"
+                                }
+                            ]
+                        },
+                        "description": "List all hospital-specific fields for test5Hospital.\n\nShows fields that override or extend the GLOBAL defaults for this hospital."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Admin: Add/Override a Field (Upsert)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    const response = pm.response.json();",
+                                    "    if (response.data && response.data.field) {",
+                                    "        pm.collectionVariables.set('formFieldId', response.data.field.field_id);",
+                                    "        console.log('Form field ID saved:', response.data.field.field_id);",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"form_type\": \"HISTORY\",\n  \"field_key\": \"custom_field_example\",\n  \"label_en\": \"Special Hospital Note\",\n  \"label_mr\": \"विशेष नोंद\",\n  \"input_type\": \"textarea\",\n  \"is_required\": false,\n  \"sort_order\": 200,\n  \"section\": \"chief_complaint\",\n  \"section_label_en\": \"Chief Complaint\",\n  \"section_label_mr\": \"प्रधान वेदना\",\n  \"section_sort_order\": 1,\n  \"hospital_type\": \"AYURVEDIC\",\n  \"placeholder_en\": \"Enter special note\",\n  \"placeholder_mr\": \"विशेष नोंद लिहा\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/forms/fields/upsert",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "forms",
+                                "fields",
+                                "upsert"
+                            ]
+                        },
+                        "description": "Create or override a form field for this hospital.\n\n• Hospital Admin: creates field for THEIR hospital\n• Super Admin: can pass hospital_id=GLOBAL to create global defaults\n\n✅ field_id is auto-saved as formFieldId\n✅ Role: Hospital Admin, Super Admin\n\nInput types: text | number | date | time | email | phone | select | multi_select | textarea | checkbox | computed"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Admin: Toggle Field Enable/Disable",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/forms/fields/{{formFieldId}}/toggle",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "forms",
+                                "fields",
+                                "{{formFieldId}}",
+                                "toggle"
+                            ]
+                        },
+                        "description": "Toggle a form field ON/OFF for this hospital.\n\nUse {{formFieldId}} — auto-saved from the upsert request above.\n\n✅ Role: Hospital Admin, Super Admin\n\nNote: Hospital Admin can only toggle their OWN fields, not GLOBAL defaults."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "💰 Billing",
+            "item": [
+                {
+                    "name": "Create Bill",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\\n  \"patient_id\": \"{{patientId}}\",\\n  \"items\": [\\n    { \"description\": \"Consultation\", \"quantity\": 1, \"unit_price\": 500, \"amount\": 500 },\\n    { \"description\": \"Medicines\", \"quantity\": 1, \"unit_price\": 350, \"amount\": 350 }\\n  ],\\n  \"subtotal\": 850,\\n  \"discount\": 50,\\n  \"total_amount\": 800\\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/visits/{{visitId}}/bill",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "visits",
+                                "{{visitId}}",
+                                "bill"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200 || pm.response.code === 201) {",
+                                    "    const response = pm.response.json();",
+                                    "    if (response.data?.bill?.bill_id) {",
+                                    "        pm.collectionVariables.set('bill-id', response.data?.bill?.bill_id);",
+                                    "        console.log('bill-id saved:', response.data?.bill?.bill_id);",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Get Bill by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/billing/:id",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "billing",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "{{bill-id}}"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Record Payment",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\\n  \"amount_paid\": 800,\\n  \"payment_mode\": \"UPI\",\\n  \"transaction_id\": \"TXN123456789\"\\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/billing/:id/pay",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "billing",
+                                ":id",
+                                "pay"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "{{bill-id}}"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "List Bills",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/billing/list?status=PENDING",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "billing",
+                                "list"
+                            ],
+                            "query": [
+                                {
+                                    "key": "status",
+                                    "value": "PENDING"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "📦 Inventory",
+            "item": [
+                {
+                    "name": "Stock In",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\\n  \"medicine_id\": \"{{medicineId}}\",\\n  \"quantity_added\": 50,\\n  \"batch_number\": \"BCH-2026-03\",\\n  \"expiry_date\": \"2028-03-01\",\\n  \"unit_price\": 120\\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/inventory/stock-in",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "inventory",
+                                "stock-in"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200 || pm.response.code === 201) {",
+                                    "    const response = pm.response.json();",
+                                    "    if (response.data?.record?.inventory_id) {",
+                                    "        pm.collectionVariables.set('inv-id', response.data?.record?.inventory_id);",
+                                    "        console.log('inv-id saved:', response.data?.record?.inventory_id);",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "List Inventory",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/inventory/list",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "inventory",
+                                "list"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Low Stock Alerts",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/inventory/low-stock?threshold=15",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "inventory",
+                                "low-stock"
+                            ],
+                            "query": [
+                                {
+                                    "key": "threshold",
+                                    "value": "15"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Adjust Stock (Manual)",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\\n  \"quantity\": 45,\\n  \"reason\": \"Spoilage\"\\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/inventory/:inventory_id/adjust",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "inventory",
+                                ":inventory_id",
+                                "adjust"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "inventory_id",
+                                    "value": "{{inv-id}}"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "📊 Patient Reports",
+            "item": [
+                {
+                    "name": "Full Visit Report",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/visits/{{visitId}}/report",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "visits",
+                                "{{visitId}}",
+                                "report"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Full Patient History",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/patients/{{patientId}}/history-report",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "patients",
+                                "{{patientId}}",
+                                "history-report"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "📅 Appointments",
+            "item": [
+                {
+                    "name": "Book Appointment",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\\n  \"patient_id\": \"{{patientId}}\",\\n  \"appointment_date\": \"2026-03-20\",\\n  \"appointment_time\": \"14:00\",\\n  \"reason\": \"Follow up\",\\n  \"doctor_id\": \"{{doctorId}}\"\\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/appointments/book",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "appointments",
+                                "book"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200 || pm.response.code === 201) {",
+                                    "    const response = pm.response.json();",
+                                    "    if (response.data?.appointment?.appointment_id) {",
+                                    "        pm.collectionVariables.set('app-id', response.data?.appointment?.appointment_id);",
+                                    "        console.log('app-id saved:', response.data?.appointment?.appointment_id);",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "List by Date",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/appointments/list?date=2026-03-20",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "appointments",
+                                "list"
+                            ],
+                            "query": [
+                                {
+                                    "key": "date",
+                                    "value": "2026-03-20"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Status",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\\n  \"status\": \"CONFIRMED\"\\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/appointments/:id/status",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "appointments",
+                                ":id",
+                                "status"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "{{app-id}}"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "🛏️ IPD (Inpatient)",
+            "item": [
+                {
+                    "name": "Admit Patient",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\\n  \"patient_id\": \"{{patientId}}\",\\n  \"ward\": \"General\",\\n  \"bed_number\": \"G-12\",\\n  \"admission_reason\": \"Surgery monitoring\",\\n  \"doctor_id\": \"{{doctorId}}\"\\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/ipd/admit",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "ipd",
+                                "admit"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200 || pm.response.code === 201) {",
+                                    "    const response = pm.response.json();",
+                                    "    if (response.data?.admission?.ipd_id) {",
+                                    "        pm.collectionVariables.set('ipd-id', response.data?.admission?.ipd_id);",
+                                    "        console.log('ipd-id saved:', response.data?.admission?.ipd_id);",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Add Daily Note",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\\n  \"note\": \"Patient stable. Pulse 72, BP 120/80.\",\\n  \"noted_by_name\": \"Dr. Rajesh\"\\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/ipd/:ipd_id/note",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "ipd",
+                                ":ipd_id",
+                                "note"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "ipd_id",
+                                    "value": "{{ipd-id}}"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "List Admitted Patients",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/ipd/list",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "ipd",
+                                "list"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Discharge Patient",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\\n  \"discharge_summary\": \"Discharged in stable condition. Continue oral meds for 7 days.\",\\n  \"follow_up_date\": \"2026-03-25\"\\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/ipd/:ipd_id/discharge",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "ipd",
+                                ":ipd_id",
+                                "discharge"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "ipd_id",
+                                    "value": "{{ipd-id}}"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "🌿 Panchakarma",
+            "item": [
+                {
+                    "name": "Create Treatment Plan",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\\n  \"patient_id\": \"{{patientId}}\",\\n  \"treatment_type\": \"basti\",\\n  \"planned_start_date\": \"2026-03-10\",\\n  \"planned_sessions\": 7,\\n  \"doctor_id\": \"{{doctorId}}\",\\n  \"notes\": \"Anuvasana Basti planned\"\\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/panchakarma/plan",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "panchakarma",
+                                "plan"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200 || pm.response.code === 201) {",
+                                    "    const response = pm.response.json();",
+                                    "    if (response.data?.plan?.plan_id) {",
+                                    "        pm.collectionVariables.set('plan-id', response.data?.plan?.plan_id);",
+                                    "        console.log('plan-id saved:', response.data?.plan?.plan_id);",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Log Session",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\\n  \"session_number\": 1,\\n  \"procedure_details\": \"Administered with 50ml Mahanarayan Tail\",\\n  \"medicines_used\": [\\n    { \"medicine_id\": \"{{medicineId}}\", \"quantity\": 50, \"unit\": \"ml\" }\\n  ],\\n  \"patient_reaction\": \"Well tolerated, no complications\",\\n  \"therapist_name\": \"Amit\"\\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/panchakarma/:plan_id/session",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "panchakarma",
+                                ":plan_id",
+                                "session"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "plan_id",
+                                    "value": "{{plan-id}}"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "List Plans",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/panchakarma/list",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "panchakarma",
+                                "list"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Complete Plan",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\\n  \"status\": \"COMPLETED\",\\n  \"completion_notes\": \"7 sessions successfully completed with significant pain relief.\"\\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/panchakarma/:plan_id/complete",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "panchakarma",
+                                ":plan_id",
+                                "complete"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "plan_id",
+                                    "value": "{{plan-id}}"
+                                }
+                            ]
+                        }
+                    }
                 }
             ]
         }

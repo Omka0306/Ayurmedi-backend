@@ -25,7 +25,9 @@
   },
   "devDependencies": {
     "esbuild": "^0.27.2",
+    "newman": "^6.2.2",
     "serverless": "^4.31.2",
-    "serverless-esbuild": "^1.57.0"
+    "serverless-esbuild": "^1.57.0",
+    "serverless-plugin-split-stacks": "^1.14.0"
   }
 }

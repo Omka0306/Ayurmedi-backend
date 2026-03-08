@@ -21,6 +21,12 @@ module.exports = {
     PATIENT_HISTORIES: process.env.PATIENT_HISTORIES_TABLE || `ayurmedi-backend-patient-histories-${STAGE}`,
     PRESCRIPTIONS: process.env.PRESCRIPTIONS_TABLE || `ayurmedi-backend-prescriptions-${STAGE}`,
     PRESCRIPTION_ITEMS: process.env.PRESCRIPTION_ITEMS_TABLE || `ayurmedi-backend-prescription-items-${STAGE}`,
+    FORM_FIELDS: process.env.FORM_FIELDS_TABLE || `ayurmedi-backend-form-fields-${STAGE}`,
+    BILLING: process.env.BILLING_TABLE || `ayurmedi-backend-billing-${STAGE}`,
+    INVENTORY: process.env.INVENTORY_TABLE || `ayurmedi-backend-inventory-${STAGE}`,
+    APPOINTMENTS: process.env.APPOINTMENTS_TABLE || `ayurmedi-backend-appointments-${STAGE}`,
+    IPD_ADMISSIONS: process.env.IPD_ADMISSIONS_TABLE || `ayurmedi-backend-ipd-admissions-${STAGE}`,
+    PANCHAKARMA_PLANS: process.env.PANCHAKARMA_PLANS_TABLE || `ayurmedi-backend-panchakarma-plans-${STAGE}`,
   },
 
   ROLES: {
