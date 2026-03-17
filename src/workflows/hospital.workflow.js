@@ -1,4 +1,4 @@
-const { registerHospitalWithAdmin } = require('../services/hospital.service');
+const { registerHospitalWithAdmin, getHospital, listAllHospitals } = require('../services/hospital.service');
 
 const registerHospital = async (payload /*, context */) => {
   // context is available if we need SUPER_ADMIN info later
@@ -7,5 +7,7 @@ const registerHospital = async (payload /*, context */) => {
 
 module.exports = {
   registerHospital,
+  getHospital: (id) => getHospital(id),
+  listHospitals: () => listAllHospitals(),
 };
 

@@ -1,6 +1,6 @@
 const { v4: uuidv4 } = require('uuid');
 const { ROLES } = require('../constants/config');
-const { createHospital } = require('../persistence/hospital.repo');
+const { createHospital, getHospitalById, listHospitals } = require('../persistence/hospital.repo');
 const { createUser } = require('../persistence/user.repo');
 const { adminCreateUserWithPassword } = require('./cognito.service');
 const { AppError } = require('../utils/error.util');
@@ -74,7 +74,21 @@ const registerHospitalWithAdmin = async (payload) => {
   };
 };
 
+const getHospital = async (hospitalId) => {
+  const hospital = await getHospitalById(hospitalId);
+  if (!hospital) {
+    throw new AppError('Hospital not found', { statusCode: 404, code: 'NOT_FOUND' });
+  }
+  return hospital;
+};
+
+const listAllHospitals = async () => {
+  return listHospitals();
+};
+
 module.exports = {
   registerHospitalWithAdmin,
+  getHospital,
+  listAllHospitals,
 };
 

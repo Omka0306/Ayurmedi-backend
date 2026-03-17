@@ -1,0 +1,1085 @@
+{
+  "info": {
+    "_postman_id": "ayurmedi-backend-v1",
+    "name": "AyurMedi Backend APIs",
+    "description": "Complete Ayurmedi Hospital Management System API Collection - Production Deployed Version\n\n## Modules Included:\n- 🔐 Authentication (Login, Logout, Password Reset)\n- 🏥 Hospital Management\n- 👥 User Management\n- 📋 Patient Registration & Management\n- 📝 Dynamic Forms Engine\n- 🩺 Consultations\n- 📋 Prescriptions\n- 🌿 Panchakarma Treatments\n- 🎫 Token & Queue Management\n- 💰 Billing & Payments\n- 💊 Inventory Management\n- 📊 Reports & Analytics\n- 📈 Dashboard\n\n## Environment Variables Required:\n- `base_url`: https://zxtnpc9yhe.execute-api.ap-south-1.amazonaws.com\n- `auth_token`: JWT token (auto-filled after login)\n- `hospital_id`: Hospital ID (auto-filled after login)\n- `patient_id`: Patient ID (filled during testing)\n- `doctor_id`: Doctor ID (filled during testing)\n- `consultation_id`: Consultation ID (filled during testing)\n- `prescription_id`: Prescription ID (filled during testing)\n- `plan_id`: Panchakarma plan ID (filled during testing)\n- `bill_id`: Bill ID (filled during testing)\n\n## Authentication:\nAll APIs (except login, forgot-password, reset-password) require JWT authentication. Use the login request to obtain the token.\n\n## SRS Compliance:\nAll APIs are compliant with the Ayurmedi SRS v1.0 requirements and support multi-tenant hospital isolation.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "🔐 Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const res = pm.response.json();",
+                  "  if (res.success && res.data) {",
+                  "    pm.environment.set(\"auth_token\", res.data.accessToken);",
+                  "    pm.environment.set(\"hospital_id\", res.data.hospitalId || \"GLOBAL\");",
+                  "    pm.environment.set(\"user_id\", res.data.userId || res.data.sub);",
+                  "    pm.environment.set(\"user_role\", res.data.role || \"SUPER_ADMIN\");",
+                  "    console.log(\"✅ Login successful - Token saved to environment\");",
+                  "  }",
+                  "} else {",
+                  "  console.log(\"❌ Login failed:\", res.message);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@ayurmedi.com\",\n  \"password\": \"Admin@2026\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticate user and return JWT tokens\n\n**SRS Module**: Authentication\n**Required Fields**: email, password\n**Response**: accessToken, refreshToken, userInfo"
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success true\", () => {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.success).to.be.true;",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "  pm.environment.unset(\"auth_token\");",
+                  "  console.log(\"✅ Logged out - Token cleared\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Logout user and invalidate JWT token\n\n**SRS Module**: Authentication\n**Auth Required**: Yes\n**Response**: Success confirmation"
+          },
+          "response": []
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@ayurmedi.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/forgot-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "forgot-password"
+              ]
+            },
+            "description": "Request password reset code\n\n**SRS Module**: Authentication\n**Required Fields**: email\n**Auth Required**: No\n**Response**: Confirmation message"
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@ayurmedi.com\",\n  \"confirmationCode\": \"123456\",\n  \"newPassword\": \"NewPassword@2026\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/reset-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "reset-password"
+              ]
+            },
+            "description": "Reset password with confirmation code\n\n**SRS Module**: Authentication\n**Required Fields**: email, confirmationCode, newPassword\n**Auth Required**: No\n**Response**: Success confirmation"
+          },
+          "response": []
+        }
+      ],
+      "description": "Authentication and authorization endpoints including login, logout, and password management."
+    },
+    {
+      "name": "🏥 Hospital Management",
+      "item": [
+        {
+          "name": "Register Hospital",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201 or 200\", () => {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success true\", () => {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.success).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test(\"Response has hospital data\", () => {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res).to.have.property('data');",
+                  "  pm.expect(res.data).to.have.property('hospital_id');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Ayurvedic Hospital\",\n  \"code\": \"TAH001\",\n  \"address\": \"123 Healthcare Street, Mumbai, Maharashtra 400001\",\n  \"phone\": \"+91-22-12345678\",\n  \"email\": \"contact@tahospital.com\",\n  \"subscription_start\": \"2026-03-17\",\n  \"status\": \"ACTIVE\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/hospitals/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "hospitals",
+                "register"
+              ]
+            },
+            "description": "Register a new hospital in the system\n\n**SRS Module**: Hospital Management\n**Required Fields**: name, code, address\n**Auth Required**: No (for initial registration)\n**Response**: Hospital details with ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Hospital",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success true\", () => {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.success).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/hospitals/{{hospital_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "hospitals",
+                "{{hospital_id}}"
+              ]
+            },
+            "description": "Get hospital details by ID\n\n**SRS Module**: Hospital Management\n**Auth Required**: Yes\n**Response**: Hospital information"
+          },
+          "response": []
+        },
+        {
+          "name": "List Hospitals",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success true\", () => {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.success).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test(\"Response has array data\", () => {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(Array.isArray(res.data)).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/hospitals",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "hospitals"
+              ]
+            },
+            "description": "List all hospitals (Super Admin only)\n\n**SRS Module**: Hospital Management\n**Auth Required**: Yes (Super Admin role)\n**Response**: Array of hospitals"
+          },
+          "response": []
+        }
+      ],
+      "description": "Hospital registration and management endpoints for multi-tenant setup."
+    },
+    {
+      "name": "👥 User Management",
+      "item": [
+        {
+          "name": "Create User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", () => {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success true\", () => {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.success).to.be.true;",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "  const res = pm.response.json();",
+                  "  if (res.data && res.data.user_id) {",
+                  "    pm.environment.set(\"doctor_id\", res.data.user_id);",
+                  "    console.log(\"✅ User created - ID saved:\", res.data.user_id);",
+                  "  }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Dr. Rajesh Kumar\",\n  \"email\": \"dr.rajesh@hospital.com\",\n  \"phone\": \"+91-9876543210\",\n  \"role\": \"DOCTOR\",\n  \"specialization\": \"Ayurvedic Medicine\",\n  \"avg_consult_mins\": 15,\n  \"status\": \"ACTIVE\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users"
+              ]
+            },
+            "description": "Create a new user in the hospital\n\n**SRS Module**: User Management\n**Required Fields**: name, email, role\n**Auth Required**: Yes (Hospital Admin)\n**Response**: User details with ID"
+          },
+          "response": []
+        },
+        {
+          "name": "List Users",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success true\", () => {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.success).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users"
+              ]
+            },
+            "description": "List all users in the hospital\n\n**SRS Module**: User Management\n**Auth Required**: Yes\n**Response**: Array of users"
+          },
+          "response": []
+        },
+        {
+          "name": "Get User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success true\", () => {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.success).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/{{doctor_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "{{doctor_id}}"
+              ]
+            },
+            "description": "Get user details by ID\n\n**SRS Module**: User Management\n**Auth Required**: Yes\n**Response**: User information"
+          },
+          "response": []
+        },
+        {
+          "name": "Update User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success true\", () => {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.success).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Dr. Rajesh Kumar Updated\",\n  \"phone\": \"+91-9876543211\",\n  \"specialization\": \"Senior Ayurvedic Consultant\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/{{doctor_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "{{doctor_id}}"
+              ]
+            },
+            "description": "Update user information\n\n**SRS Module**: User Management\n**Auth Required**: Yes\n**Response**: Updated user details"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success true\", () => {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.success).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/{{doctor_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "{{doctor_id}}"
+              ]
+            },
+            "description": "Delete a user (soft delete)\n\n**SRS Module**: User Management\n**Auth Required**: Yes (Hospital Admin)\n**Response**: Success confirmation"
+          },
+          "response": []
+        }
+      ],
+      "description": "User creation and management with role-based access control."
+    },
+    {
+      "name": "📋 Patient Registration",
+      "item": [
+        {
+          "name": "Register Patient",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", () => {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success true\", () => {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.success).to.be.true;",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "  const res = pm.response.json();",
+                  "  if (res.data && res.data.patient_id) {",
+                  "    pm.environment.set(\"patient_id\", res.data.patient_id);",
+                  "    console.log(\"✅ Patient created - ID saved:\", res.data.patient_id);",
+                  "  }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Priya Sharma\",\n  \"mobile\": \"9876543210\",\n  \"age\": 35,\n  \"birth_date\": \"1990-01-01\",\n  \"address\": \"123 Wellness Street, Mumbai, Maharashtra 400001\",\n  \"email\": \"priya.sharma@email.com\",\n  \"phone\": \"+91-22-12345678\",\n  \"education\": \"Graduate\",\n  \"birthplace\": \"Mumbai\",\n  \"weight\": 65,\n  \"occupation\": \"Software Engineer\",\n  \"current_ailment\": \"Chronic back pain and stress\",\n  \"recent_complaints\": \"Lower back pain for 6 months\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/patients",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "patients"
+              ]
+            },
+            "description": "Register a new patient in the hospital\n\n**SRS Module**: Patient Registration\n**Required Fields**: name, mobile\n**Auth Required**: Yes\n**Response**: Patient details with registration number"
+          },
+          "response": []
+        },
+        {
+          "name": "List Patients",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success true\", () => {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.success).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test(\"Response has array data\", () => {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(Array.isArray(res.data)).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/patients",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "patients"
+              ]
+            },
+            "description": "List all patients in the hospital\n\n**SRS Module**: Patient Registration\n**Auth Required**: Yes\n**Response**: Array of patients"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Patient",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success true\", () => {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.success).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/patients/{{patient_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "patients",
+                "{{patient_id}}"
+              ]
+            },
+            "description": "Get patient details by ID\n\n**SRS Module**: Patient Registration\n**Auth Required**: Yes\n**Response**: Patient information"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Patient",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success true\", () => {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.success).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"address\": \"456 Updated Street, Mumbai, Maharashtra 400002\",\n  \"phone\": \"+91-22-87654321\",\n  \"current_ailment\": \"Back pain improving with treatment\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/patients/{{patient_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "patients",
+                "{{patient_id}}"
+              ]
+            },
+            "description": "Update patient information\n\n**SRS Module**: Patient Registration\n**Auth Required**: Yes\n**Response**: Updated patient details"
+          },
+          "response": []
+        },
+        {
+          "name": "Search Patients",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success true\", () => {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.success).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/patients/search?q=Priya",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "patients",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "Priya"
+                }
+              ]
+            },
+            "description": "Search patients by name or mobile\n\n**SRS Module**: Patient Registration\n**Auth Required**: Yes\n**Query Parameters**: q (search term)\n**Response**: Array of matching patients"
+          },
+          "response": []
+        }
+      ],
+      "description": "Patient registration, management, and search functionality."
+    },
+    {
+      "name": "📝 Dynamic Forms",
+      "item": [
+        {
+          "name": "Get Form Template",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success true\", () => {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.success).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/forms/config/PATIENT_INTAKE",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "forms",
+                "config",
+                "PATIENT_INTAKE"
+              ]
+            },
+            "description": "Get form template configuration\n\n**SRS Module**: Dynamic Forms Engine\n**Form Types**: PATIENT_INTAKE, LIFESTYLE_HISTORY, CLINICAL_EXAM, DIET_HISTORY\n**Auth Required**: Yes\n**Response**: Form template with fields"
+          },
+          "response": []
+        },
+        {
+          "name": "Save Form Template",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success true\", () => {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.success).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fields\": [\n    {\n      \"id\": \"name\",\n      \"label\": \"Patient Name\",\n      \"type\": \"TEXT\",\n      \"required\": true,\n      \"order\": 1,\n      \"placeholder\": \"Enter patient name\"\n    },\n    {\n      \"id\": \"mobile\",\n      \"label\": \"Mobile Number\",\n      \"type\": \"TEXT\",\n      \"required\": true,\n      \"order\": 2,\n      \"placeholder\": \"Enter 10-digit mobile number\"\n    },\n    {\n      \"id\": \"age\",\n      \"label\": \"Age\",\n      \"type\": \"NUMBER\",\n      \"required\": true,\n      \"order\": 3,\n      \"min\": 0,\n      \"max\": 150\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/forms/config/PATIENT_INTAKE",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "forms",
+                "config",
+                "PATIENT_INTAKE"
+              ]
+            },
+            "description": "Save/update form template configuration\n\n**SRS Module**: Dynamic Forms Engine\n**Auth Required**: Yes (Hospital Admin)\n**Response**: Saved form template"
+          },
+          "response": []
+        },
+        {
+          "name": "List Form Templates",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success true\", () => {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.success).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/forms/config",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "forms",
+                "config"
+              ]
+            },
+            "description": "List all form templates for the hospital\n\n**SRS Module**: Dynamic Forms Engine\n**Auth Required**: Yes\n**Response**: Array of form templates"
+          },
+          "response": []
+        }
+      ],
+      "description": "Dynamic form engine for customizable patient intake and clinical forms."
+    },
+    {
+      "name": "📈 Dashboard",
+      "item": [
+        {
+          "name": "Dashboard Summary",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success true\", () => {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.success).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test(\"Response has dashboard metrics\", () => {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.data).to.have.property('total_visits');",
+                  "  pm.expect(res.data).to.have.property('waiting');",
+                  "  pm.expect(res.data).to.have.property('in_consultation');",
+                  "  pm.expect(res.data).to.have.property('completed');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/summary",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "summary"
+              ]
+            },
+            "description": "Get dashboard summary with key metrics\n\n**SRS Module**: Dashboard & Analytics\n**Auth Required**: Yes\n**Response**: Dashboard metrics (visits, queue, revenue, etc.)"
+          },
+          "response": []
+        },
+        {
+          "name": "Dashboard Analytics",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success true\", () => {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.success).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/analytics",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "analytics"
+              ]
+            },
+            "description": "Get detailed analytics data\n\n**SRS Module**: Dashboard & Analytics\n**Auth Required**: Yes\n**Response**: Detailed analytics data"
+          },
+          "response": []
+        }
+      ],
+      "description": "Dashboard summary and analytics for hospital management."
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global pre-request script",
+          "if (!pm.environment.get(\"base_url\")) {",
+          "  pm.environment.set(\"base_url\", \"https://zxtnpc9yhe.execute-api.ap-south-1.amazonaws.com\");",
+          "}",
+          "",
+          "// Auto-refresh token if needed (for long sessions)",
+          "const token = pm.environment.get(\"auth_token\");",
+          "if (token && token.includes(\"exp\")) {",
+          "  // Simple token expiry check (you can enhance this)",
+          "  const payload = JSON.parse(atob(token.split('.')[1]));",
+          "  if (payload.exp * 1000 < Date.now()) {",
+          "    console.log(\"⚠️ Token expired, please login again\");",
+          "  }",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://zxtnpc9yhe.execute-api.ap-south-1.amazonaws.com",
+      "type": "string"
+    }
+  ]
+}

@@ -1,0 +1,680 @@
+[
+  {
+    "id": "PanchakarmaUpdateSessionLambdaFunction",
+    "type": "AWS::Lambda::Function",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "TokenDisplayLambdaFunction",
+    "type": "AWS::Lambda::Function",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "TokenQueueLambdaFunction",
+    "type": "AWS::Lambda::Function",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "AuthResetPasswordLambdaFunction",
+    "type": "AWS::Lambda::Function",
+    "status": "CREATE_FAILED",
+    "reason": "Resource handler returned message: \"Unzipped size must be smaller than 262144000 bytes (Service: Lambda, Status Code: 400, Request ID: e7a7a813-457b-421f-99f3-125a526b9ff5) (SDK Attempt Count: 1)\" (RequestToken: bad53316-18a1-c71f-1531-ffb37f73ce0a, HandlerErrorCode: InvalidRequest)"
+  },
+  {
+    "id": "PrescriptionGetLambdaFunction",
+    "type": "AWS::Lambda::Function",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "PatientUpdateLambdaFunction",
+    "type": "AWS::Lambda::Function",
+    "status": "CREATE_FAILED",
+    "reason": "Resource handler returned message: \"Unzipped size must be smaller than 262144000 bytes (Service: Lambda, Status Code: 400, Request ID: 39d7066b-07af-464a-8281-a7d451be703c) (SDK Attempt Count: 1)\" (RequestToken: 84aea4df-13f0-f938-872d-5b5a9deb8df2, HandlerErrorCode: InvalidRequest)"
+  },
+  {
+    "id": "PatientPrescriptionsLambdaFunction",
+    "type": "AWS::Lambda::Function",
+    "status": "CREATE_FAILED",
+    "reason": "Resource handler returned message: \"Unzipped size must be smaller than 262144000 bytes (Service: Lambda, Status Code: 400, Request ID: 8f4ad793-7dec-4d93-a7a6-1d8007fbba14) (SDK Attempt Count: 1)\" (RequestToken: 83fbffaf-a2b2-4f3e-b684-934d1776f2bc, HandlerErrorCode: InvalidRequest)"
+  },
+  {
+    "id": "TokenUpdateStatusLambdaFunction",
+    "type": "AWS::Lambda::Function",
+    "status": "CREATE_FAILED",
+    "reason": "Resource handler returned message: \"Unzipped size must be smaller than 262144000 bytes (Service: Lambda, Status Code: 400, Request ID: 47b528a7-eecb-4d88-9601-7dbc0c4332f4) (SDK Attempt Count: 1)\" (RequestToken: 6c7109a3-ddf1-086d-3c47-dd11e3e44acf, HandlerErrorCode: InvalidRequest)"
+  },
+  {
+    "id": "InventoryStockInLambdaFunction",
+    "type": "AWS::Lambda::Function",
+    "status": "CREATE_FAILED",
+    "reason": "Resource handler returned message: \"Unzipped size must be smaller than 262144000 bytes (Service: Lambda, Status Code: 400, Request ID: 351fd046-6a13-4704-8899-25c1f246e110) (SDK Attempt Count: 1)\" (RequestToken: 0c4b0f45-4572-268a-2199-e76dd0437681, HandlerErrorCode: InvalidRequest)"
+  },
+  {
+    "id": "InventoryItemCreateLambdaFunction",
+    "type": "AWS::Lambda::Function",
+    "status": "CREATE_FAILED",
+    "reason": "Resource handler returned message: \"Unzipped size must be smaller than 262144000 bytes (Service: Lambda, Status Code: 400, Request ID: c885d110-6560-4a33-aa7a-53bcda8054c0) (SDK Attempt Count: 1)\" (RequestToken: a136683d-dc87-9ce5-1c04-2efa3056081d, HandlerErrorCode: InvalidRequest)"
+  },
+  {
+    "id": "PatientSearchLambdaFunction",
+    "type": "AWS::Lambda::Function",
+    "status": "CREATE_FAILED",
+    "reason": "Resource handler returned message: \"Unzipped size must be smaller than 262144000 bytes (Service: Lambda, Status Code: 400, Request ID: 08beb3a6-3da8-4389-ae20-28ce4d8ccb45) (SDK Attempt Count: 1)\" (RequestToken: 3369a54e-1beb-446a-c83c-0d0ea42ccf4b, HandlerErrorCode: InvalidRequest)"
+  },
+  {
+    "id": "PatientGetLambdaFunction",
+    "type": "AWS::Lambda::Function",
+    "status": "CREATE_FAILED",
+    "reason": "Resource handler returned message: \"Unzipped size must be smaller than 262144000 bytes (Service: Lambda, Status Code: 400, Request ID: 2f264c77-4419-446e-bed4-52b79bfd1501) (SDK Attempt Count: 1)\" (RequestToken: 61b95874-a1b4-f692-eb2d-a9a99a4ff73b, HandlerErrorCode: InvalidRequest)"
+  },
+  {
+    "id": "ReportInventoryUsageLambdaFunction",
+    "type": "AWS::Lambda::Function",
+    "status": "CREATE_FAILED",
+    "reason": "Resource handler returned message: \"Unzipped size must be smaller than 262144000 bytes (Service: Lambda, Status Code: 400, Request ID: ae50bc57-d5a8-4bb5-98a8-0c2f43c36c38) (SDK Attempt Count: 1)\" (RequestToken: aca3918b-fd7e-fd88-d78e-06d225758053, HandlerErrorCode: InvalidRequest)"
+  },
+  {
+    "id": "UserDeleteLambdaFunction",
+    "type": "AWS::Lambda::Function",
+    "status": "CREATE_FAILED",
+    "reason": "Resource handler returned message: \"Unzipped size must be smaller than 262144000 bytes (Service: Lambda, Status Code: 400, Request ID: 51d60c47-69c6-41e6-9ef1-1d3d5b530cbf) (SDK Attempt Count: 1)\" (RequestToken: 926fa1b6-3c23-dc7a-f25c-b950aa6fdc21, HandlerErrorCode: InvalidRequest)"
+  },
+  {
+    "id": "PatientListLambdaFunction",
+    "type": "AWS::Lambda::Function",
+    "status": "CREATE_FAILED",
+    "reason": "Resource handler returned message: \"Unzipped size must be smaller than 262144000 bytes (Service: Lambda, Status Code: 400, Request ID: c6ce6ae6-4c6b-4665-a45b-67f30273d937) (SDK Attempt Count: 1)\" (RequestToken: 1cc90ac3-9d13-aba3-c822-9ed8d391683a, HandlerErrorCode: InvalidRequest)"
+  },
+  {
+    "id": "ConsultationUpdateLambdaFunction",
+    "type": "AWS::Lambda::Function",
+    "status": "CREATE_FAILED",
+    "reason": "Resource handler returned message: \"Unzipped size must be smaller than 262144000 bytes (Service: Lambda, Status Code: 400, Request ID: ba418a03-9f70-4105-9dd6-cec30d11fe7f) (SDK Attempt Count: 1)\" (RequestToken: e0946975-06ef-706a-e2ed-63b255ea0f3a, HandlerErrorCode: InvalidRequest)"
+  },
+  {
+    "id": "ReportRevenueLambdaFunction",
+    "type": "AWS::Lambda::Function",
+    "status": "CREATE_FAILED",
+    "reason": "Resource handler returned message: \"Unzipped size must be smaller than 262144000 bytes (Service: Lambda, Status Code: 400, Request ID: 962fe81a-1c0d-4d8b-95ca-df05d538a199) (SDK Attempt Count: 1)\" (RequestToken: 67de1ec2-25c5-21ec-8439-d2fadc4cce21, HandlerErrorCode: InvalidRequest)"
+  },
+  {
+    "id": "PanchakarmaListSessionsLambdaFunction",
+    "type": "AWS::Lambda::Function",
+    "status": "CREATE_FAILED",
+    "reason": "Resource handler returned message: \"Unzipped size must be smaller than 262144000 bytes (Service: Lambda, Status Code: 400, Request ID: 9e1fca5e-fc29-45fa-bc2b-ce8bb91253e5) (SDK Attempt Count: 1)\" (RequestToken: a6a7b269-d145-64db-7244-6ef58e75e486, HandlerErrorCode: InvalidRequest)"
+  },
+  {
+    "id": "PatientPanchakarmaLambdaFunction",
+    "type": "AWS::Lambda::Function",
+    "status": "CREATE_FAILED",
+    "reason": "Resource handler returned message: \"Unzipped size must be smaller than 262144000 bytes (Service: Lambda, Status Code: 400, Request ID: 38bf957b-5457-421b-9b5b-409076d53c86) (SDK Attempt Count: 1)\" (RequestToken: 944b530c-60d4-5a66-b569-ccf95888c0f7, HandlerErrorCode: InvalidRequest)"
+  },
+  {
+    "id": "ReportPatientHistoryLambdaFunction",
+    "type": "AWS::Lambda::Function",
+    "status": "CREATE_FAILED",
+    "reason": "Resource handler returned message: \"Unzipped size must be smaller than 262144000 bytes (Service: Lambda, Status Code: 400, Request ID: d84d9266-ef0b-441a-9527-f267227d6ec0) (SDK Attempt Count: 1)\" (RequestToken: a0142674-7f20-7a78-8404-032be27e3496, HandlerErrorCode: InvalidRequest)"
+  },
+  {
+    "id": "AuthLoginLambdaFunction",
+    "type": "AWS::Lambda::Function",
+    "status": "CREATE_FAILED",
+    "reason": "Resource handler returned message: \"Unzipped size must be smaller than 262144000 bytes (Service: Lambda, Status Code: 400, Request ID: ee68eb1b-c4e0-4e9d-a251-330182f5bae4) (SDK Attempt Count: 1)\" (RequestToken: 3d083fda-0ebd-0034-4efb-dd2f58e7b6d5, HandlerErrorCode: InvalidRequest)"
+  },
+  {
+    "id": "HospitalRegisterLambdaFunction",
+    "type": "AWS::Lambda::Function",
+    "status": "CREATE_FAILED",
+    "reason": "Resource handler returned message: \"Unzipped size must be smaller than 262144000 bytes (Service: Lambda, Status Code: 400, Request ID: 95c145bf-ccc4-4ba4-951f-c50b262a700e) (SDK Attempt Count: 1)\" (RequestToken: fefafaa4-98d8-55aa-0e59-3883ceda488b, HandlerErrorCode: InvalidRequest)"
+  },
+  {
+    "id": "FormConfigListLambdaFunction",
+    "type": "AWS::Lambda::Function",
+    "status": "CREATE_FAILED",
+    "reason": "Resource handler returned message: \"Unzipped size must be smaller than 262144000 bytes (Service: Lambda, Status Code: 400, Request ID: 98065f13-63bd-44c0-a049-2c4a640d50b3) (SDK Attempt Count: 1)\" (RequestToken: 88f1c1fe-21cb-d514-d98a-d08c356498f9, HandlerErrorCode: InvalidRequest)"
+  },
+  {
+    "id": "PanchakarmaGetPlanLambdaFunction",
+    "type": "AWS::Lambda::Function",
+    "status": "CREATE_FAILED",
+    "reason": "Resource handler returned message: \"Unzipped size must be smaller than 262144000 bytes (Service: Lambda, Status Code: 400, Request ID: 29f1d390-ef9e-4b9b-b7d6-1db38a207fa3) (SDK Attempt Count: 1)\" (RequestToken: fdc9d621-cad5-5f57-efe4-06aad864f587, HandlerErrorCode: InvalidRequest)"
+  },
+  {
+    "id": "PatientBillsLambdaFunction",
+    "type": "AWS::Lambda::Function",
+    "status": "CREATE_FAILED",
+    "reason": "Resource handler returned message: \"Unzipped size must be smaller than 262144000 bytes (Service: Lambda, Status Code: 400, Request ID: 839f42e1-1502-4a1b-85fe-583b8af4f260) (SDK Attempt Count: 1)\" (RequestToken: 2eb62808-0b63-a3c8-72b3-47c69c4be28d, HandlerErrorCode: InvalidRequest)"
+  },
+  {
+    "id": "HospitalGetLambdaFunction",
+    "type": "AWS::Lambda::Function",
+    "status": "CREATE_FAILED",
+    "reason": "Resource handler returned message: \"Unzipped size must be smaller than 262144000 bytes (Service: Lambda, Status Code: 400, Request ID: 6035750f-b5b5-44cf-a8d3-ea5705ceaedc) (SDK Attempt Count: 1)\" (RequestToken: 9a2ca62a-ed01-0b54-6176-c26633c79dc2, HandlerErrorCode: InvalidRequest)"
+  },
+  {
+    "id": "InventoryItemGetLambdaFunction",
+    "type": "AWS::Lambda::Function",
+    "status": "CREATE_FAILED",
+    "reason": "Resource handler returned message: \"Unzipped size must be smaller than 262144000 bytes (Service: Lambda, Status Code: 400, Request ID: 510350a2-9bc9-49ec-8cfa-0e2009cf1cfc) (SDK Attempt Count: 1)\" (RequestToken: 59f250e3-5be6-8c3f-2d96-df854405e544, HandlerErrorCode: InvalidRequest)"
+  },
+  {
+    "id": "UserListLambdaFunction",
+    "type": "AWS::Lambda::Function",
+    "status": "CREATE_FAILED",
+    "reason": "Resource handler returned message: \"Unzipped size must be smaller than 262144000 bytes (Service: Lambda, Status Code: 400, Request ID: bd05b449-add0-4219-a843-f3d2bf33aad6) (SDK Attempt Count: 1)\" (RequestToken: d4cde199-9182-0eb7-d5a9-91e9220a0e77, HandlerErrorCode: InvalidRequest)"
+  },
+  {
+    "id": "ReportLowStockLambdaFunction",
+    "type": "AWS::Lambda::Function",
+    "status": "CREATE_FAILED",
+    "reason": "Resource handler returned message: \"Unzipped size must be smaller than 262144000 bytes (Service: Lambda, Status Code: 400, Request ID: 1340c366-cea2-4097-95b9-b698b80950ea) (SDK Attempt Count: 1)\" (RequestToken: 63f333a9-61d5-4381-f8ba-79158168f616, HandlerErrorCode: InvalidRequest)"
+  },
+  {
+    "id": "BillGetLambdaFunction",
+    "type": "AWS::Lambda::Function",
+    "status": "CREATE_FAILED",
+    "reason": "Resource handler returned message: \"Unzipped size must be smaller than 262144000 bytes (Service: Lambda, Status Code: 400, Request ID: 259ac2eb-7c1a-4007-96c5-3bf4255016b2) (SDK Attempt Count: 1)\" (RequestToken: ebd9096e-55c3-2b39-6532-28e6f8f4a20e, HandlerErrorCode: InvalidRequest)"
+  },
+  {
+    "id": "InventoryItemListLambdaFunction",
+    "type": "AWS::Lambda::Function",
+    "status": "CREATE_FAILED",
+    "reason": "Resource handler returned message: \"Unzipped size must be smaller than 262144000 bytes (Service: Lambda, Status Code: 400, Request ID: 906c901b-dc82-4079-b408-5abc0a1631f9) (SDK Attempt Count: 1)\" (RequestToken: d7986deb-6e92-0bd6-7db9-42f7e0c5cde7, HandlerErrorCode: InvalidRequest)"
+  },
+  {
+    "id": "BranchCreateLambdaFunction",
+    "type": "AWS::Lambda::Function",
+    "status": "CREATE_FAILED",
+    "reason": "Resource handler returned message: \"Unzipped size must be smaller than 262144000 bytes (Service: Lambda, Status Code: 400, Request ID: 945335dd-0b1f-41a3-854d-6b2794384fe1) (SDK Attempt Count: 1)\" (RequestToken: 22203667-6d3e-aa08-0ce0-3f010ae4aefe, HandlerErrorCode: InvalidRequest)"
+  },
+  {
+    "id": "InventoryExpiryLambdaFunction",
+    "type": "AWS::Lambda::Function",
+    "status": "CREATE_FAILED",
+    "reason": "Resource handler returned message: \"Unzipped size must be smaller than 262144000 bytes (Service: Lambda, Status Code: 400, Request ID: 01434dc6-7252-4134-8a48-ac2279dea102) (SDK Attempt Count: 1)\" (RequestToken: 376784f6-9ec3-8d5d-b510-bd5054438d0d, HandlerErrorCode: InvalidRequest)"
+  },
+  {
+    "id": "BranchListLambdaFunction",
+    "type": "AWS::Lambda::Function",
+    "status": "CREATE_FAILED",
+    "reason": "Resource handler returned message: \"Unzipped size must be smaller than 262144000 bytes (Service: Lambda, Status Code: 400, Request ID: 1ce84365-af30-4312-b5f5-f9d2f1a61bfa) (SDK Attempt Count: 1)\" (RequestToken: afe70c7a-2c64-c0a1-4928-2a423636b892, HandlerErrorCode: InvalidRequest)"
+  },
+  {
+    "id": "AuthLogoutLambdaFunction",
+    "type": "AWS::Lambda::Function",
+    "status": "CREATE_FAILED",
+    "reason": "Resource handler returned message: \"Unzipped size must be smaller than 262144000 bytes (Service: Lambda, Status Code: 400, Request ID: a73acf06-7a5f-4873-9344-b6a2ec80f2fa) (SDK Attempt Count: 1)\" (RequestToken: 3f0e7dc2-99bc-77b0-b4eb-0e776d77acc1, HandlerErrorCode: InvalidRequest)"
+  },
+  {
+    "id": "ReportDailyOpdLambdaFunction",
+    "type": "AWS::Lambda::Function",
+    "status": "CREATE_FAILED",
+    "reason": "Resource handler returned message: \"Unzipped size must be smaller than 262144000 bytes (Service: Lambda, Status Code: 400, Request ID: 73b4c3df-544e-4f70-a081-2c757e94b12c) (SDK Attempt Count: 1)\" (RequestToken: dc8dd058-dc0b-a7b6-6d4d-9582688dae3f, HandlerErrorCode: InvalidRequest)"
+  },
+  {
+    "id": "InventoryStockAdjustLambdaFunction",
+    "type": "AWS::Lambda::Function",
+    "status": "CREATE_FAILED",
+    "reason": "Resource handler returned message: \"Unzipped size must be smaller than 262144000 bytes (Service: Lambda, Status Code: 400, Request ID: 914c7172-729e-4b4e-a7c9-87ce69fa7151) (SDK Attempt Count: 1)\" (RequestToken: ef490449-0151-b498-4149-c3babc7dd8d4, HandlerErrorCode: InvalidRequest)"
+  },
+  {
+    "id": "AuthForgotPasswordLambdaFunction",
+    "type": "AWS::Lambda::Function",
+    "status": "CREATE_FAILED",
+    "reason": "Resource handler returned message: \"Unzipped size must be smaller than 262144000 bytes (Service: Lambda, Status Code: 400, Request ID: f54f23ac-17f7-4f0f-88ac-f6d7a850fee1) (SDK Attempt Count: 1)\" (RequestToken: 316f59bc-64d2-646a-c3a3-5b181162063d, HandlerErrorCode: InvalidRequest)"
+  },
+  {
+    "id": "HospitalListLambdaFunction",
+    "type": "AWS::Lambda::Function",
+    "status": "CREATE_FAILED",
+    "reason": "Resource handler returned message: \"Unzipped size must be smaller than 262144000 bytes (Service: Lambda, Status Code: 400, Request ID: eed73c39-fcdd-43f0-8173-d3ab43cb145d) (SDK Attempt Count: 1)\" (RequestToken: e4cd68c6-f5b5-9dc6-5e10-3d8a24690f83, HandlerErrorCode: InvalidRequest)"
+  },
+  {
+    "id": "BranchCreateLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "InventoryStockAdjustLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "HttpApiStage",
+    "type": "AWS::ApiGatewayV2::Stage",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "InventoryItemGetLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "BranchesTable",
+    "type": "AWS::DynamoDB::Table",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "UserUpdateLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "BillCreateLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "ConsultationsTable",
+    "type": "AWS::DynamoDB::Table",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "TokenDisplayLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "TokensTable",
+    "type": "AWS::DynamoDB::Table",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "InventoryItemCreateLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "UserCreateLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "PanchakarmaCreatePlanLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "FormConfigListLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "HospitalsTable",
+    "type": "AWS::DynamoDB::Table",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "ConsultationUpdateLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "PatientSearchLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "FormConfigsTable",
+    "type": "AWS::DynamoDB::Table",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "PanchakarmaAddSessionLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "HospitalGetLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "PanchakarmaUpdateSessionLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "ReportRevenueLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "HospitalListLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "PatientsTable",
+    "type": "AWS::DynamoDB::Table",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "InventoryStockInLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "BillPaymentLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "StockMovementsTable",
+    "type": "AWS::DynamoDB::Table",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "BranchListLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "PanchakarmaSessionsTable",
+    "type": "AWS::DynamoDB::Table",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "AuthLoginLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "PatientPrescriptionsLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "PrescriptionCreateLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "PatientUpdateLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "TokenCreateLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "HospitalRegisterLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "DashboardSummaryLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "PrescriptionsTable",
+    "type": "AWS::DynamoDB::Table",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "BillGetLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "PatientPanchakarmaLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "BillsTable",
+    "type": "AWS::DynamoDB::Table",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "InventoryItemListLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "AuthResetPasswordLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "InventoryExpiryLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "FormConfigSaveLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "PrescriptionGetLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "TokenQueueLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "ReportLowStockLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "ReportInventoryUsageLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "PatientGetLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "AuthLogoutLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "InventoryLowStockLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "ConsultationGetLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "InventoryItemUpdateLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "UsersTable",
+    "type": "AWS::DynamoDB::Table",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "UserDeleteLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "PanchakarmaListSessionsLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "PanchakarmaGetPlanLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "BranchUpdateLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "AuthForgotPasswordLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "ReportPatientHistoryLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "UserListLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "UserGetLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "ConsultationCreateLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "InventoryItemsTable",
+    "type": "AWS::DynamoDB::Table",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "DashboardAnalyticsLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "TokenUpdateStatusLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "PatientListLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "FormConfigGetLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "PatientBillsLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "PatientConsultationsLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "PanchakarmaPlansTable",
+    "type": "AWS::DynamoDB::Table",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "ReportDailyOpdLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "PatientCreateLogGroup",
+    "type": "AWS::Logs::LogGroup",
+    "status": "CREATE_FAILED",
+    "reason": "Resource creation cancelled"
+  },
+  {
+    "id": "AyurmediUserPoolClient",
+    "type": "AWS::Cognito::UserPoolClient",
+    "status": "CREATE_FAILED",
+    "reason": "Resource handler returned message: \"1 validation error detected: Value '[ADMIN_NO_SRP_AUTH, ADMIN_USER_PASSWORD_AUTH]' at 'explicitAuthFlows' failed to satisfy constraint: Member must satisfy constraint: [Member must satisfy enum value set: [ALLOW_CUSTOM_AUTH, ADMIN_NO_SRP_AUTH, ALLOW_USER_AUTH, ALLOW_REFRESH_TOKEN_AUTH, ALLOW_USER_PASSWORD_AUTH, ALLOW_USER_SRP_AUTH, CUSTOM_AUTH_FLOW_ONLY, USER_PASSWORD_AUTH, ALLOW_ADMIN_USER_PASSWORD_AUTH]] (Service: CognitoIdentityProvider, Status Code: 400, Request ID: 9a9c0cde-accc-4478-967d-74fda9a2de28) (SDK Attempt Count: 1)\" (RequestToken: c1ff4b26-8cb2-2847-0d63-a33ed9dcdb7a, HandlerErrorCode: InvalidRequest)"
+  }
+]

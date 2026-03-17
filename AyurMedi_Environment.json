@@ -1,0 +1,100 @@
+{
+  "id": "ayurmedi-backend-env-v1",
+  "name": "AyurMedi Backend Environment",
+  "values": [
+    {
+      "key": "base_url",
+      "value": "https://zxtnpc9yhe.execute-api.ap-south-1.amazonaws.com",
+      "type": "default",
+      "enabled": true,
+      "description": "API Gateway base URL for AyurMedi Backend"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "secret",
+      "enabled": true,
+      "description": "JWT authentication token (auto-filled after login)"
+    },
+    {
+      "key": "hospital_id",
+      "value": "",
+      "type": "default",
+      "enabled": true,
+      "description": "Current hospital ID (auto-filled after login)"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "default",
+      "enabled": true,
+      "description": "Current user ID (auto-filled after login)"
+    },
+    {
+      "key": "user_role",
+      "value": "",
+      "type": "default",
+      "enabled": true,
+      "description": "Current user role (auto-filled after login)"
+    },
+    {
+      "key": "patient_id",
+      "value": "",
+      "type": "default",
+      "enabled": true,
+      "description": "Patient ID (filled during patient creation/testing)"
+    },
+    {
+      "key": "doctor_id",
+      "value": "",
+      "type": "default",
+      "enabled": true,
+      "description": "Doctor ID (filled during user creation/testing)"
+    },
+    {
+      "key": "consultation_id",
+      "value": "",
+      "type": "default",
+      "enabled": true,
+      "description": "Consultation ID (filled during consultation creation/testing)"
+    },
+    {
+      "key": "prescription_id",
+      "value": "",
+      "type": "default",
+      "enabled": true,
+      "description": "Prescription ID (filled during prescription creation/testing)"
+    },
+    {
+      "key": "plan_id",
+      "value": "",
+      "type": "default",
+      "enabled": true,
+      "description": "Panchakarma plan ID (filled during plan creation/testing)"
+    },
+    {
+      "key": "bill_id",
+      "value": "",
+      "type": "default",
+      "enabled": true,
+      "description": "Bill ID (filled during bill creation/testing)"
+    },
+    {
+      "key": "branch_id",
+      "value": "",
+      "type": "default",
+      "enabled": true,
+      "description": "Branch ID (filled during branch creation/testing)"
+    },
+    {
+      "key": "form_template_id",
+      "value": "",
+      "type": "default",
+      "enabled": true,
+      "description": "Form template ID (filled during form template creation/testing)"
+    }
+  ],
+  "_postman_variable_scope": "environment",
+  "_postman_exported_at": "2026-03-17T20:50:00.000Z",
+  "_postman_exported_using": "Postman/10.0.0"
+}

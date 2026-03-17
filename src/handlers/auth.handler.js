@@ -1,70 +1,62 @@
-const { ok, noContent, badRequest, serverError } = require('../utils/response.util');
-const { toHttpResponse, isAppError } = require('../utils/error.util');
-const authWorkflow = require('../workflows/auth.workflow');
-const logger = require('../utils/logger.util');
+const {
+  makeHandler,
+  makePublicHandler,
+  parseBody,
+} = require("../utils/handler.util");
+const { validateBody } = require("../utils/validators");
+const authWorkflow = require("../workflows/auth.workflow");
+const {
+  loginSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+} = require("../utils/validators/auth.validators");
 
-const parseBody = (event) => {
-  if (!event.body) return {};
-  try {
-    return JSON.parse(event.body);
-  } catch {
-    throw new Error('Invalid JSON body');
-  }
-};
+/**
+ * Authenticate user with email and password
+ * @param {Object} event - API Gateway event
+ * @param {Object} ctx - Auth context (not used for login)
+ * @returns {Object} Authentication tokens
+ */
+module.exports.login = makePublicHandler(async (event) => {
+  const body = parseBody(event);
+  validateBody(body, loginSchema);
+  const tokens = await authWorkflow.login(body);
+  return tokens;
+});
 
-const handleError = (err) => {
-  logger.error('Handler error', { error: err.message, stack: err.stack });
-  if (isAppError(err)) {
-    return toHttpResponse(err);
-  }
-  return serverError('Internal Server Error', err.message);
-};
+/**
+ * Logout user (invalidate tokens)
+ * @param {Object} event - API Gateway event
+ * @param {Object} ctx - Auth context
+ * @returns {Object} Empty response
+ */
+module.exports.logout = makeHandler([], async (event, ctx) => {
+  await authWorkflow.logout({});
+  return {};
+});
 
-module.exports.login = async (event) => {
-  try {
-    const body = parseBody(event);
-    if (!body.email || !body.password) {
-      return badRequest('Email and password are required');
-    }
-    const tokens = await authWorkflow.login(body);
-    return ok(tokens);
-  } catch (err) {
-    return handleError(err);
-  }
-};
+/**
+ * Request password reset code
+ * @param {Object} event - API Gateway event
+ * @param {Object} ctx - Auth context (not used for forgot password)
+ * @returns {Object} Confirmation message
+ */
+module.exports.forgotPassword = makePublicHandler(async (event) => {
+  const body = parseBody(event);
+  validateBody(body, forgotPasswordSchema);
+  const res = await authWorkflow.forgotPassword(body);
+  return res;
+});
 
-module.exports.logout = async () => {
-  try {
-    await authWorkflow.logout({});
-    return noContent();
-  } catch (err) {
-    return handleError(err);
-  }
-};
-
-module.exports.forgotPassword = async (event) => {
-  try {
-    const body = parseBody(event);
-    if (!body.email) {
-      return badRequest('Email is required');
-    }
-    const res = await authWorkflow.forgotPassword(body);
-    return ok(res);
-  } catch (err) {
-    return handleError(err);
-  }
-};
-
-module.exports.resetPassword = async (event) => {
-  try {
-    const body = parseBody(event);
-    if (!body.email || !body.confirmationCode || !body.newPassword) {
-      return badRequest('email, confirmationCode, and newPassword are required');
-    }
-    const res = await authWorkflow.resetPassword(body);
-    return ok(res);
-  } catch (err) {
-    return handleError(err);
-  }
-};
-
+/**
+ * Reset password with confirmation code
+ * @param {Object} event - API Gateway event
+ * @param {Object} ctx - Auth context (not used for reset password)
+ * @returns {Object} Confirmation message
+ */
+module.exports.resetPassword = makePublicHandler(async (event) => {
+  const body = parseBody(event);
+  validateBody(body, resetPasswordSchema);
+  const res = await authWorkflow.resetPassword(body);
+  return res;
+});

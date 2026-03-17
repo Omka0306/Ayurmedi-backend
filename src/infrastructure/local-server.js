@@ -39,6 +39,8 @@ const toLambdaEvent = (req) => {
     path: req.path,
     rawPath: req.path,
     headers: req.headers,
+    queryStringParameters: req.query && Object.keys(req.query).length > 0 ? req.query : undefined,
+    rawQueryString: req.originalUrl && req.originalUrl.includes('?') ? req.originalUrl.split('?').slice(1).join('?') : '',
     body: req.body ? JSON.stringify(req.body) : null,
     requestContext: {
       http: {

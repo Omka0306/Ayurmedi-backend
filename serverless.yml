@@ -1,6 +1,49 @@
 service: ayurmedi-backend
 
-frameworkVersion: '4'
+frameworkVersion: "4"
+
+package:
+  individually: false
+  patterns:
+    # Dev tools - not needed at runtime
+    - "!node_modules/aws-sdk/**"
+    - "!node_modules/effect/**"
+    - "!node_modules/@effect/**"
+    - "!node_modules/java-invoke-local/**"
+    - "!node_modules/@esbuild/**"
+    - "!node_modules/esbuild/**"
+    - "!node_modules/@faker-js/**"
+    - "!node_modules/postman-runtime/**"
+    - "!node_modules/postman-sandbox/**"
+    - "!node_modules/serverless/**"
+    - "!node_modules/@serverless/**"
+    - "!node_modules/web-streams-polyfill/**"
+    - "!node_modules/rxjs/**"
+    - "!node_modules/luxon/**"
+    - "!node_modules/json-refs/**"
+    - "!node_modules/handlebars/**"
+    - "!node_modules/@types/**"
+    - "!node_modules/es-abstract/**"
+    - "!node_modules/dayjs/locale/**"
+    - "!node_modules/dayjs/plugin/**"
+    # Temp/test files
+    - "!node_modules/.bin/**"
+    - "!**/*.test.js"
+    - "!**/*.spec.js"
+    - "!**/*.md"
+    - "!.git/**"
+    - "!test/**"
+    - "!tests/**"
+    - "!coverage/**"
+    - "!.serverless/**"
+    - "!deploy_log.txt"
+    - "!cf_events.json"
+    - "!all_failures.json"
+    - "!fetch_*.js"
+    - "!read_error.js"
+    - "!error.txt"
+    - "!events.json"
+    - "!client_error.txt"
 
 provider:
   name: aws
@@ -10,12 +53,46 @@ provider:
   memorySize: 256
   timeout: 10
 
+  httpApi:
+    cors:
+      allowedOrigins:
+        - http://localhost:3000
+        - https://localhost:3000
+        - http://localhost:3001
+        - https://ayurmedi.com
+        - https://www.ayurmedi.com
+      allowedHeaders:
+        - Content-Type
+        - Authorization
+        - x-hospital-id
+      allowedMethods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - OPTIONS
+      allowCredentials: true
+
   environment:
     STAGE: ${self:provider.stage}
+    # Existing tables
     HOSPITALS_TABLE: ${self:service}-hospitals-${self:provider.stage}
     USERS_TABLE: ${self:service}-users-${self:provider.stage}
     USER_POOL_ID: !Ref AyurmediUserPool
     USER_POOL_CLIENT_ID: !Ref AyurmediUserPoolClient
+    # New tables
+    PATIENTS_TABLE: ${self:service}-patients-${self:provider.stage}
+    CONSULTATIONS_TABLE: ${self:service}-consultations-${self:provider.stage}
+    PRESCRIPTIONS_TABLE: ${self:service}-prescriptions-${self:provider.stage}
+    PANCHAKARMA_PLANS_TABLE: ${self:service}-pk-plans-${self:provider.stage}
+    PANCHAKARMA_SESSIONS_TABLE: ${self:service}-pk-sessions-${self:provider.stage}
+    TOKENS_TABLE: ${self:service}-tokens-${self:provider.stage}
+    BILLS_TABLE: ${self:service}-bills-${self:provider.stage}
+    INVENTORY_ITEMS_TABLE: ${self:service}-inventory-items-${self:provider.stage}
+    STOCK_MOVEMENTS_TABLE: ${self:service}-stock-movements-${self:provider.stage}
+    FORM_CONFIGS_TABLE: ${self:service}-form-configs-${self:provider.stage}
+    BRANCHES_TABLE: ${self:service}-branches-${self:provider.stage}
+    AUDIT_LOG_TABLE: ${self:service}-audit-${self:provider.stage}
 
   iam:
     role:
@@ -25,11 +102,41 @@ provider:
             - dynamodb:PutItem
             - dynamodb:GetItem
             - dynamodb:Query
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            - dynamodb:Scan
+            - dynamodb:BatchWriteItem
+            - dynamodb:BatchGetItem
           Resource:
+            # Existing tables
             - !GetAtt HospitalsTable.Arn
             - !GetAtt UsersTable.Arn
-            - !Sub '${UsersTable.Arn}/index/*'
-            - !Sub '${HospitalsTable.Arn}/index/*'
+            - !Sub "${UsersTable.Arn}/index/*"
+            - !Sub "${HospitalsTable.Arn}/index/*"
+            # New tables
+            - !GetAtt PatientsTable.Arn
+            - !Sub "${PatientsTable.Arn}/index/*"
+            - !GetAtt ConsultationsTable.Arn
+            - !Sub "${ConsultationsTable.Arn}/index/*"
+            - !GetAtt PrescriptionsTable.Arn
+            - !Sub "${PrescriptionsTable.Arn}/index/*"
+            - !GetAtt PanchakarmaPlansTable.Arn
+            - !Sub "${PanchakarmaPlansTable.Arn}/index/*"
+            - !GetAtt PanchakarmaSessionsTable.Arn
+            - !Sub "${PanchakarmaSessionsTable.Arn}/index/*"
+            - !GetAtt TokensTable.Arn
+            - !Sub "${TokensTable.Arn}/index/*"
+            - !GetAtt BillsTable.Arn
+            - !Sub "${BillsTable.Arn}/index/*"
+            - !GetAtt InventoryItemsTable.Arn
+            - !Sub "${InventoryItemsTable.Arn}/index/*"
+            - !GetAtt StockMovementsTable.Arn
+            - !Sub "${StockMovementsTable.Arn}/index/*"
+            - !GetAtt FormConfigsTable.Arn
+            - !GetAtt BranchesTable.Arn
+            - !Sub "${BranchesTable.Arn}/index/*"
+            - !GetAtt AuditLogTable.Arn
+            - !Sub "${AuditLogTable.Arn}/index/*"
         - Effect: Allow
           Action:
             - cognito-idp:AdminCreateUser
@@ -38,9 +145,11 @@ provider:
             - cognito-idp:AdminGetUser
             - cognito-idp:ForgotPassword
             - cognito-idp:ConfirmForgotPassword
-          Resource: '*'
+            - cognito-idp:AdminUpdateUserAttributes
+          Resource: "*"
 
 functions:
+  # ─── Auth ──────────────────────────────────────────────
   authLogin:
     handler: src/handlers/auth.login
     events:
@@ -69,22 +178,419 @@ functions:
           method: POST
           path: /auth/reset-password
 
+  # ─── Hospital ──────────────────────────────────────────
   hospitalRegister:
     handler: src/handlers/hospital.register
     events:
       - httpApi:
           method: POST
-          path: /hospital/register
+          path: /hospitals/register
 
+  hospitalGet:
+    handler: src/handlers/hospital.getHospital
+    events:
+      - httpApi:
+          method: GET
+          path: /hospitals/{id}
+
+  hospitalList:
+    handler: src/handlers/hospital.listHospitals
+    events:
+      - httpApi:
+          method: GET
+          path: /hospitals
+
+  # ─── Branches ──────────────────────────────────────────
+  branchCreate:
+    handler: src/handlers/branch.create
+    events:
+      - httpApi:
+          method: POST
+          path: /hospitals/{hospitalId}/branches
+
+  branchList:
+    handler: src/handlers/branch.list
+    events:
+      - httpApi:
+          method: GET
+          path: /hospitals/{hospitalId}/branches
+
+  branchUpdate:
+    handler: src/handlers/branch.update
+    events:
+      - httpApi:
+          method: PUT
+          path: /branches/{id}
+
+  # ─── Users ─────────────────────────────────────────────
   userCreate:
     handler: src/handlers/user.create
     events:
       - httpApi:
           method: POST
-          path: /user/create
+          path: /users
+
+  userList:
+    handler: src/handlers/user.list
+    events:
+      - httpApi:
+          method: GET
+          path: /users
+
+  userGet:
+    handler: src/handlers/user.get
+    events:
+      - httpApi:
+          method: GET
+          path: /users/{id}
+
+  userUpdate:
+    handler: src/handlers/user.update
+    events:
+      - httpApi:
+          method: PUT
+          path: /users/{id}
+
+  userDelete:
+    handler: src/handlers/user.remove
+    events:
+      - httpApi:
+          method: DELETE
+          path: /users/{id}
+
+  # ─── Patients ──────────────────────────────────────────
+  patientCreate:
+    handler: src/handlers/patient.create
+    events:
+      - httpApi:
+          method: POST
+          path: /patients
+
+  patientList:
+    handler: src/handlers/patient.list
+    events:
+      - httpApi:
+          method: GET
+          path: /patients
+
+  patientGet:
+    handler: src/handlers/patient.get
+    events:
+      - httpApi:
+          method: GET
+          path: /patients/{id}
+
+  patientUpdate:
+    handler: src/handlers/patient.update
+    events:
+      - httpApi:
+          method: PUT
+          path: /patients/{id}
+
+  patientSearch:
+    handler: src/handlers/patient.search
+    events:
+      - httpApi:
+          method: GET
+          path: /patients/search
+
+  # ─── Form Configs ───────────────────────────────────────
+  formConfigGet:
+    handler: src/handlers/form-config.get
+    events:
+      - httpApi:
+          method: GET
+          path: /forms/config/{formType}
+
+  formConfigSave:
+    handler: src/handlers/form-config.save
+    events:
+      - httpApi:
+          method: PUT
+          path: /forms/config/{formType}
+
+  formConfigList:
+    handler: src/handlers/form-config.list
+    events:
+      - httpApi:
+          method: GET
+          path: /forms/config
+
+  # ─── Consultations ─────────────────────────────────────
+  consultationCreate:
+    handler: src/handlers/consultation.create
+    events:
+      - httpApi:
+          method: POST
+          path: /consultations
+
+  consultationGet:
+    handler: src/handlers/consultation.get
+    events:
+      - httpApi:
+          method: GET
+          path: /consultations/{id}
+
+  consultationUpdate:
+    handler: src/handlers/consultation.update
+    events:
+      - httpApi:
+          method: PUT
+          path: /consultations/{id}
+
+  patientConsultations:
+    handler: src/handlers/consultation.listByPatient
+    events:
+      - httpApi:
+          method: GET
+          path: /patients/{patientId}/consultations
+
+  # ─── Prescriptions ─────────────────────────────────────
+  prescriptionCreate:
+    handler: src/handlers/prescription.create
+    events:
+      - httpApi:
+          method: POST
+          path: /prescriptions
+
+  prescriptionGet:
+    handler: src/handlers/prescription.get
+    events:
+      - httpApi:
+          method: GET
+          path: /prescriptions/{id}
+
+  patientPrescriptions:
+    handler: src/handlers/prescription.listByPatient
+    events:
+      - httpApi:
+          method: GET
+          path: /patients/{patientId}/prescriptions
+
+  # ─── Panchakarma ───────────────────────────────────────
+  panchakarmaCreatePlan:
+    handler: src/handlers/panchakarma.createPlan
+    events:
+      - httpApi:
+          method: POST
+          path: /panchakarma/plans
+
+  panchakarmaGetPlan:
+    handler: src/handlers/panchakarma.getPlan
+    events:
+      - httpApi:
+          method: GET
+          path: /panchakarma/plans/{id}
+
+  patientPanchakarma:
+    handler: src/handlers/panchakarma.listByPatient
+    events:
+      - httpApi:
+          method: GET
+          path: /patients/{patientId}/panchakarma
+
+  panchakarmaAddSession:
+    handler: src/handlers/panchakarma.addSession
+    events:
+      - httpApi:
+          method: POST
+          path: /panchakarma/plans/{id}/sessions
+
+  panchakarmaListSessions:
+    handler: src/handlers/panchakarma.listSessions
+    events:
+      - httpApi:
+          method: GET
+          path: /panchakarma/plans/{id}/sessions
+
+  panchakarmaUpdateSession:
+    handler: src/handlers/panchakarma.updateSession
+    events:
+      - httpApi:
+          method: PUT
+          path: /panchakarma/sessions/{sessionId}
+
+  # ─── Token / Queue ─────────────────────────────────────
+  tokenCreate:
+    handler: src/handlers/token.create
+    events:
+      - httpApi:
+          method: POST
+          path: /tokens
+
+  tokenQueue:
+    handler: src/handlers/token.getQueue
+    events:
+      - httpApi:
+          method: GET
+          path: /tokens/queue
+
+  tokenUpdateStatus:
+    handler: src/handlers/token.updateStatus
+    events:
+      - httpApi:
+          method: PUT
+          path: /tokens/{id}/status
+
+  tokenDisplay:
+    handler: src/handlers/token.display
+    events:
+      - httpApi:
+          method: GET
+          path: /tokens/display
+
+  # ─── Billing ───────────────────────────────────────────
+  billCreate:
+    handler: src/handlers/billing.create
+    events:
+      - httpApi:
+          method: POST
+          path: /billing
+
+  billGet:
+    handler: src/handlers/billing.get
+    events:
+      - httpApi:
+          method: GET
+          path: /billing/{id}
+
+  billPayment:
+    handler: src/handlers/billing.recordPayment
+    events:
+      - httpApi:
+          method: PUT
+          path: /billing/{id}/payment
+
+  patientBills:
+    handler: src/handlers/billing.listByPatient
+    events:
+      - httpApi:
+          method: GET
+          path: /patients/{patientId}/bills
+
+  # ─── Inventory ─────────────────────────────────────────
+  inventoryItemCreate:
+    handler: src/handlers/inventory.createItem
+    events:
+      - httpApi:
+          method: POST
+          path: /inventory/items
+
+  inventoryItemList:
+    handler: src/handlers/inventory.listItems
+    events:
+      - httpApi:
+          method: GET
+          path: /inventory/items
+
+  inventoryItemGet:
+    handler: src/handlers/inventory.getItem
+    events:
+      - httpApi:
+          method: GET
+          path: /inventory/items/{id}
+
+  inventoryItemUpdate:
+    handler: src/handlers/inventory.updateItem
+    events:
+      - httpApi:
+          method: PUT
+          path: /inventory/items/{id}
+
+  inventoryStockIn:
+    handler: src/handlers/inventory.stockIn
+    events:
+      - httpApi:
+          method: POST
+          path: /inventory/stock-in
+
+  inventoryStockAdjust:
+    handler: src/handlers/inventory.stockAdjust
+    events:
+      - httpApi:
+          method: POST
+          path: /inventory/stock-adjust
+
+  inventoryLowStock:
+    handler: src/handlers/inventory.lowStockAlerts
+    events:
+      - httpApi:
+          method: GET
+          path: /inventory/alerts/low-stock
+
+  inventoryExpiry:
+    handler: src/handlers/inventory.expiryAlerts
+    events:
+      - httpApi:
+          method: GET
+          path: /inventory/alerts/expiry
+
+  # ─── Reports ───────────────────────────────────────────
+  reportDailyOpd:
+    handler: src/handlers/report.dailyOpd
+    timeout: 29
+    memorySize: 512
+    events:
+      - httpApi:
+          method: GET
+          path: /reports/daily-opd
+
+  reportRevenue:
+    handler: src/handlers/report.revenue
+    timeout: 29
+    memorySize: 512
+    events:
+      - httpApi:
+          method: GET
+          path: /reports/revenue
+
+  reportInventoryUsage:
+    handler: src/handlers/report.inventoryUsage
+    timeout: 29
+    memorySize: 512
+    events:
+      - httpApi:
+          method: GET
+          path: /reports/inventory-usage
+
+  reportLowStock:
+    handler: src/handlers/report.lowStock
+    events:
+      - httpApi:
+          method: GET
+          path: /reports/low-stock
+
+  reportPatientHistory:
+    handler: src/handlers/report.patientHistory
+    timeout: 29
+    memorySize: 512
+    events:
+      - httpApi:
+          method: GET
+          path: /patients/{patientId}/report
+
+  # ─── Dashboard ─────────────────────────────────────────
+  dashboardSummary:
+    handler: src/handlers/dashboard.summary
+    timeout: 15
+    memorySize: 512
+    events:
+      - httpApi:
+          method: GET
+          path: /dashboard/summary
+
+  dashboardAnalytics:
+    handler: src/handlers/dashboard.analytics
+    timeout: 29
+    memorySize: 512
+    events:
+      - httpApi:
+          method: GET
+          path: /dashboard/analytics
 
 resources:
   Resources:
+    # ─── Existing Tables ───────────────────────────────
     HospitalsTable:
       Type: AWS::DynamoDB::Table
       Properties:
@@ -116,6 +622,8 @@ resources:
             AttributeType: S
           - AttributeName: cognito_user_id
             AttributeType: S
+          - AttributeName: hospital_id
+            AttributeType: S
         KeySchema:
           - AttributeName: user_id
             KeyType: HASH
@@ -126,7 +634,330 @@ resources:
                 KeyType: HASH
             Projection:
               ProjectionType: ALL
+          - IndexName: hospital_id-index
+            KeySchema:
+              - AttributeName: hospital_id
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
 
+    # ─── Branches ──────────────────────────────────────
+    BranchesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.BRANCHES_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: branch_id
+            AttributeType: S
+          - AttributeName: hospital_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: branch_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: hospital_id-index
+            KeySchema:
+              - AttributeName: hospital_id
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+
+    # ─── Patients ──────────────────────────────────────
+    PatientsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.PATIENTS_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: patient_id
+            AttributeType: S
+          - AttributeName: hospital_id
+            AttributeType: S
+          - AttributeName: registered_at
+            AttributeType: S
+        KeySchema:
+          - AttributeName: patient_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: hospital_id-date-index
+            KeySchema:
+              - AttributeName: hospital_id
+                KeyType: HASH
+              - AttributeName: registered_at
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+
+    # ─── Form Configs ───────────────────────────────────
+    FormConfigsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.FORM_CONFIGS_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: hospital_id
+            AttributeType: S
+          - AttributeName: form_type
+            AttributeType: S
+        KeySchema:
+          - AttributeName: hospital_id
+            KeyType: HASH
+          - AttributeName: form_type
+            KeyType: RANGE
+
+    # ─── Consultations ─────────────────────────────────
+    ConsultationsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.CONSULTATIONS_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: consultation_id
+            AttributeType: S
+          - AttributeName: patient_id
+            AttributeType: S
+          - AttributeName: hospital_id
+            AttributeType: S
+          - AttributeName: consultation_date
+            AttributeType: S
+        KeySchema:
+          - AttributeName: consultation_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: patient_id-index
+            KeySchema:
+              - AttributeName: patient_id
+                KeyType: HASH
+              - AttributeName: consultation_date
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+          - IndexName: hospital_id-date-index
+            KeySchema:
+              - AttributeName: hospital_id
+                KeyType: HASH
+              - AttributeName: consultation_date
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+
+    # ─── Prescriptions ─────────────────────────────────
+    PrescriptionsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.PRESCRIPTIONS_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: prescription_id
+            AttributeType: S
+          - AttributeName: consultation_id
+            AttributeType: S
+          - AttributeName: patient_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: prescription_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: consultation_id-index
+            KeySchema:
+              - AttributeName: consultation_id
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+          - IndexName: patient_id-index
+            KeySchema:
+              - AttributeName: patient_id
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+
+    # ─── Panchakarma Plans ─────────────────────────────
+    PanchakarmaPlansTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.PANCHAKARMA_PLANS_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: plan_id
+            AttributeType: S
+          - AttributeName: patient_id
+            AttributeType: S
+          - AttributeName: hospital_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: plan_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: patient_id-index
+            KeySchema:
+              - AttributeName: patient_id
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+          - IndexName: hospital_id-index
+            KeySchema:
+              - AttributeName: hospital_id
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+
+    # ─── Panchakarma Sessions ──────────────────────────
+    PanchakarmaSessionsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.PANCHAKARMA_SESSIONS_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: plan_id
+            AttributeType: S
+          - AttributeName: session_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: plan_id
+            KeyType: HASH
+          - AttributeName: session_id
+            KeyType: RANGE
+
+    # ─── Tokens ────────────────────────────────────────
+    TokensTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.TOKENS_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: token_id
+            AttributeType: S
+          - AttributeName: hospital_id
+            AttributeType: S
+          - AttributeName: token_date
+            AttributeType: S
+        KeySchema:
+          - AttributeName: token_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: hospital_id-date-index
+            KeySchema:
+              - AttributeName: hospital_id
+                KeyType: HASH
+              - AttributeName: token_date
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+
+    # ─── Bills ─────────────────────────────────────────
+    BillsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.BILLS_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: bill_id
+            AttributeType: S
+          - AttributeName: patient_id
+            AttributeType: S
+          - AttributeName: hospital_id
+            AttributeType: S
+          - AttributeName: bill_date
+            AttributeType: S
+        KeySchema:
+          - AttributeName: bill_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: patient_id-index
+            KeySchema:
+              - AttributeName: patient_id
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+          - IndexName: hospital_id-date-index
+            KeySchema:
+              - AttributeName: hospital_id
+                KeyType: HASH
+              - AttributeName: bill_date
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+
+    # ─── Inventory Items ───────────────────────────────
+    InventoryItemsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.INVENTORY_ITEMS_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: item_id
+            AttributeType: S
+          - AttributeName: hospital_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: item_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: hospital_id-index
+            KeySchema:
+              - AttributeName: hospital_id
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+
+    # ─── Stock Movements ───────────────────────────────
+    StockMovementsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.STOCK_MOVEMENTS_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: item_id
+            AttributeType: S
+          - AttributeName: movement_id
+            AttributeType: S
+          - AttributeName: hospital_id
+            AttributeType: S
+          - AttributeName: movement_date
+            AttributeType: S
+        KeySchema:
+          - AttributeName: item_id
+            KeyType: HASH
+          - AttributeName: movement_id
+            KeyType: RANGE
+        GlobalSecondaryIndexes:
+          - IndexName: hospital_id-date-index
+            KeySchema:
+              - AttributeName: hospital_id
+                KeyType: HASH
+              - AttributeName: movement_date
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+
+    # ─── Audit Log ───────────────────────────────────────
+    AuditLogTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.AUDIT_LOG_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: audit_id
+            AttributeType: S
+          - AttributeName: hospital_id
+            AttributeType: S
+          - AttributeName: timestamp
+            AttributeType: S
+        KeySchema:
+          - AttributeName: audit_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: hospital_id-timestamp-index
+            KeySchema:
+              - AttributeName: hospital_id
+                KeyType: HASH
+              - AttributeName: timestamp
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+
+    # ─── Cognito ───────────────────────────────────────
     AyurmediUserPool:
       Type: AWS::Cognito::UserPool
       Properties:
@@ -156,7 +987,10 @@ resources:
         ClientName: ayurmedi-app-client-${self:provider.stage}
         GenerateSecret: false
         ExplicitAuthFlows:
-          - ADMIN_NO_SRP_AUTH
+          - ALLOW_ADMIN_USER_PASSWORD_AUTH
+          - ALLOW_USER_PASSWORD_AUTH
+          - ALLOW_USER_SRP_AUTH
+          - ALLOW_REFRESH_TOKEN_AUTH
 
   Outputs:
     UserPoolId:
@@ -167,4 +1001,14 @@ resources:
       Value: ${self:provider.environment.HOSPITALS_TABLE}
     UsersTableName:
       Value: ${self:provider.environment.USERS_TABLE}
+    PatientsTableName:
+      Value: ${self:provider.environment.PATIENTS_TABLE}
+    TokensTableName:
+      Value: ${self:provider.environment.TOKENS_TABLE}
+    BillsTableName:
+      Value: ${self:provider.environment.BILLS_TABLE}
+    InventoryItemsTableName:
+      Value: ${self:provider.environment.INVENTORY_ITEMS_TABLE}
 
+plugins:
+  - serverless-offline

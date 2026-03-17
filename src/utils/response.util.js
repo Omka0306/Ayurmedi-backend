@@ -1,7 +1,7 @@
 const buildResponse = (statusCode, body) => ({
   statusCode,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
   body: JSON.stringify(body ?? {}),
 });
@@ -12,17 +12,16 @@ module.exports = {
   noContent: () => ({
     statusCode: 204,
     headers: {},
-    body: '',
+    body: "",
   }),
-  badRequest: (message, details) =>
-    buildResponse(400, { success: false, message, details }),
-  unauthorized: (message = 'Unauthorized') =>
+  badRequest: (message, errors) =>
+    buildResponse(400, { success: false, message, errors: errors || [] }),
+  unauthorized: (message = "Unauthorized") =>
     buildResponse(401, { success: false, message }),
-  forbidden: (message = 'Forbidden') =>
+  forbidden: (message = "Forbidden") =>
     buildResponse(403, { success: false, message }),
-  notFound: (message = 'Not Found') =>
+  notFound: (message = "Not Found") =>
     buildResponse(404, { success: false, message }),
-  serverError: (message = 'Internal Server Error', details) =>
-    buildResponse(500, { success: false, message, details }),
+  serverError: (message = "Internal Server Error", errors) =>
+    buildResponse(500, { success: false, message, errors: errors || [] }),
 };
-

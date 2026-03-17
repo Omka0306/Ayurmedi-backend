@@ -36,3 +36,32 @@ module.exports.register = async (event) => {
   }
 };
 
+module.exports.getHospital = async (event) => {
+  try {
+    const authContext = await verifyJwtToken(event.headers.Authorization || event.headers.authorization);
+    // Hospital admin or super admin
+    roleGuard(authContext, [ROLES.SUPER_ADMIN, ROLES.HOSPITAL_ADMIN]);
+    const { id } = event.pathParameters || {};
+    // Ensure hospital admin can only view their own hospital
+    if (authContext.role !== ROLES.SUPER_ADMIN && authContext.hospital_id !== id) {
+      return badRequest('Access denied');
+    }
+    const result = await hospitalWorkflow.getHospital(id);
+    return ok(result);
+  } catch (err) {
+    return handleError(err);
+  }
+};
+
+module.exports.listHospitals = async (event) => {
+  try {
+    const authContext = await verifyJwtToken(event.headers.Authorization || event.headers.authorization);
+    // Only SUPER_ADMIN can list all hospitals
+    roleGuard(authContext, [ROLES.SUPER_ADMIN]);
+    const result = await hospitalWorkflow.listHospitals();
+    return ok(result);
+  } catch (err) {
+    return handleError(err);
+  }
+};
+

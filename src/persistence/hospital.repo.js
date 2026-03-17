@@ -1,5 +1,5 @@
 const { v4: uuidv4 } = require('uuid');
-const { PutCommand, GetCommand, QueryCommand } = require('@aws-sdk/lib-dynamodb');
+const { PutCommand, GetCommand, QueryCommand, ScanCommand } = require('@aws-sdk/lib-dynamodb');
 const { getDocumentClient } = require('./dynamodb.client');
 const { TABLES } = require('../constants/config');
 
@@ -60,9 +60,20 @@ const getHospitalByCode = async (hospitalCode) => {
   return res.Items && res.Items[0] ? res.Items[0] : null;
 };
 
+const listHospitals = async () => {
+  // Uses scan, realistically we'd add pagination and limits, but sufficient for super admin
+  const res = await ddb.send(
+    new ScanCommand({
+      TableName: TABLES.HOSPITALS,
+    }),
+  );
+  return res.Items || [];
+};
+
 module.exports = {
   createHospital,
   getHospitalById,
   getHospitalByCode,
+  listHospitals,
 };
 

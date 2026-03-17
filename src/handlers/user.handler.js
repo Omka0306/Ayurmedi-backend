@@ -1,40 +1,30 @@
-const { ok, badRequest, serverError } = require('../utils/response.util');
-const { toHttpResponse, isAppError } = require('../utils/error.util');
-const { verifyJwtToken } = require('../middlewares/auth.middleware');
-const { roleGuard } = require('../middlewares/role.middleware');
+const { makeHandler, parseBody, parsePathParam, parseQuery } = require('../utils/handler.util');
 const { ROLES } = require('../constants/config');
-const userWorkflow = require('../workflows/user.workflow');
-const logger = require('../utils/logger.util');
+const userService = require('../services/user.service');
 
-const parseBody = (event) => {
-  if (!event.body) return {};
-  try {
-    return JSON.parse(event.body);
-  } catch {
-    throw new Error('Invalid JSON body');
-  }
-};
+const ADMIN = [ROLES.SUPER_ADMIN, ROLES.HOSPITAL_ADMIN];
 
-const handleError = (err) => {
-  logger.error('Handler error', { error: err.message, stack: err.stack });
-  if (isAppError(err)) {
-    return toHttpResponse(err);
-  }
-  return serverError('Internal Server Error', err.message);
-};
+module.exports.create = makeHandler(ADMIN, async (event, ctx) => {
+  return userService.createStaffUser(parseBody(event), ctx);
+}, true);
 
-module.exports.create = async (event) => {
-  try {
-    const authContext = await verifyJwtToken(
-      event.headers.Authorization || event.headers.authorization,
-    );
-    roleGuard(authContext, [ROLES.HOSPITAL_ADMIN]);
+module.exports.list = makeHandler(ADMIN, async (event, ctx) => {
+  const { role } = parseQuery(event);
+  return userService.listStaffUsers(ctx.hospital_id, role);
+});
 
-    const body = parseBody(event);
-    const user = await userWorkflow.createUser(body, authContext);
-    return ok(user);
-  } catch (err) {
-    return handleError(err);
-  }
-};
+module.exports.get = makeHandler(ADMIN, async (event, ctx) => {
+  const id = parsePathParam(event, 'id');
+  return userService.getUser(id, ctx.hospital_id);
+});
 
+module.exports.update = makeHandler(ADMIN, async (event, ctx) => {
+  const id   = parsePathParam(event, 'id');
+  const body = parseBody(event);
+  return userService.updateStaffUser(id, body, ctx.hospital_id);
+});
+
+module.exports.remove = makeHandler(ADMIN, async (event, ctx) => {
+  const id = parsePathParam(event, 'id');
+  return userService.removeUser(id, ctx.hospital_id);
+});
