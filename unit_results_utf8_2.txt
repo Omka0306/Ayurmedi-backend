@@ -1,0 +1,458 @@
+﻿node : (node:19416) ExperimentalWarning: VM 
+Modules is an experimental feature and might 
+change at any time
+At line:1 char:1
++ node --experimental-vm-modules 
+node_modules/jest/bin/jest.js tests/un ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ((node 
+   :19416) Ex...nge at any time:String) [], Remot  
+  eException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+(Use `node --trace-warnings ...` to show where the 
+warning was created)
+FAIL tests/unit/prescriptions.test.js
+  ΓùÅ prescriptions module ΓÇ║ Create 
+prescription: valid input saves prescription, 
+deducts inventory via transactWrite
+
+    expect(received).toBe(expected) // Object.is 
+equality
+
+    Expected: 2
+    Received: 20
+
+    [0m [90m 89 |[39m     expect(transactArgs[3
+3m.[39m[33mTransactItems[39m[33m.[39mlength)[
+33m.[39mtoBe([35m3[39m)[33m;[39m
+     [90m 90 |[39m     expect(transactArgs[33m.
+[39m[33mTransactItems[39m[[35m1[39m][33m.[39m
+[33mUpdate[39m[33m.[39m[33mUpdateExpression[3
+9m)[33m.[39mtoContain([32m"currentStock - 
+:qty"[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 91 |[39m     expect(
+transactArgs[33m.[39m[33mTransactItems[39m[[35
+m1[39m][33m.[39m[33mUpdate[39m[33m.[39m[33m
+ExpressionAttributeValues[39m[[32m":qty"[39m])[
+33m.[39mtoBe([35m2[39m)[33m;[39m
+     [90m    |[39m                               
+                                                   
+  [31m[1m^[22m[39m
+     [90m 92 |[39m   })[33m;[39m
+     [90m 93 |[39m
+     [90m 94 |[39m   it([32m"Inventory 
+insufficient: returns 409 with correct item 
+details when stock too low"[39m[33m,[39m 
+[36masync[39m () [33m=>[39m {[0m
+
+      at Object.<anonymous> 
+(tests/unit/prescriptions.test.js:91:84)
+
+(node:16668) ExperimentalWarning: VM Modules is an 
+experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the 
+warning was created)
+FAIL tests/unit/branches.test.js
+  ΓùÅ branch module ΓÇ║ update 
+323e4567-e89b-12d3-a456-426614174002: updates 
+323e4567-e89b-12d3-a456-426614174002 data
+
+    
+expect(jest.fn()).toHaveBeenCalledTimes(expected)
+
+    Expected number of calls: 1
+    Received number of calls: 2
+
+    [0m [90m 70 |[39m     expect(res[33m.[39ms
+tatusCode)[33m.[39mtoBe([35m200[39m)[33m;[39m
+     [90m 71 |[39m     expect(db[33m.[39mupdate
+)[33m.[39mtoHaveBeenCalledTimes([35m1[39m)[33m
+;[39m
+    [31m[1m>[22m[39m[90m 72 |[39m     expect(
+db[33m.[39mput)[33m.[39mtoHaveBeenCalledTimes(
+[35m1[39m)[33m;[39m
+     [90m    |[39m                    
+[31m[1m^[22m[39m
+     [90m 73 |[39m   })[33m;[39m
+     [90m 74 |[39m })[33m;[39m
+     [90m 75 |[39m[0m
+
+      at Object.<anonymous> 
+(tests/unit/branches.test.js:72:20)
+
+(node:13988) ExperimentalWarning: VM Modules is an 
+experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the 
+warning was created)
+FAIL tests/unit/panchakarma.test.js
+  ΓùÅ panchakarma module ΓÇ║ Complete plan: sets 
+status=COMPLETED
+
+    expect(received).toBe(expected) // Object.is 
+equality
+
+    Expected: 200
+    Received: 409
+
+    [0m [90m 225 |[39m
+     [90m 226 |[39m     [36mconst[39m res 
+[33m=[39m [36mawait[39m 
+completePanchakarma(event)[33m;[39m
+    [31m[1m>[22m[39m[90m 227 |[39m     expect
+(res[33m.[39mstatusCode)[33m.[39mtoBe([35m200
+[39m)[33m;[39m
+     [90m     |[39m                            
+[31m[1m^[22m[39m
+     [90m 228 |[39m     [36mconst[39m 
+updateCall [33m=[39m db[33m.[39mupdate[33m.[3
+9mmock[33m.[39mcalls[[35m0[39m][[35m0[39m][3
+3m;[39m
+     [90m 229 |[39m     expect(updateCall[33m.[
+39m[33mExpressionAttributeValues[39m[[32m":statu
+s"[39m])[33m.[39mtoBe([32m"COMPLETED"[39m)[33
+m;[39m
+     [90m 230 |[39m   })[33m;[39m[0m
+
+      at Object.<anonymous> 
+(tests/unit/panchakarma.test.js:227:28)
+
+FAIL tests/unit/consultations.test.js
+  ΓùÅ consultations module ΓÇ║ Create 
+consultation: creates with IN_PROGRESS status, 
+links tokenId
+
+    expect(received).toBe(expected) // Object.is 
+equality
+
+    Expected: 201
+    Received: 400
+
+    [0m [90m 63 |[39m     
+     [90m 64 |[39m     [36mconst[39m res 
+[33m=[39m [36mawait[39m 
+createConsultation(event)[33m;[39m
+    [31m[1m>[22m[39m[90m 65 |[39m     expect(
+res[33m.[39mstatusCode)[33m.[39mtoBe([35m201[
+39m)[33m;[39m
+     [90m    |[39m                            
+[31m[1m^[22m[39m
+     [90m 66 |[39m     
+     [90m 67 |[39m     [36mconst[39m body 
+[33m=[39m [33mJSON[39m[33m.[39mparse(res[33m
+.[39mbody)[33m;[39m
+     [90m 68 |[39m     expect(body[33m.[39mdata
+[33m.[39mstatus)[33m.[39mtoBe([32m"IN_PROGRESS
+"[39m)[33m;[39m[0m
+
+      at Object.<anonymous> 
+(tests/unit/consultations.test.js:65:28)
+
+FAIL tests/unit/dashboard.test.js
+  ΓùÅ dashboard module ΓÇ║ Doctor dashboard: 
+scoped to doctorId from JWT, does not return other 
+doctors' data
+
+    expect(received).toBe(expected) // Object.is 
+equality
+
+    Expected: 1
+    Received: 2
+
+    [0m [90m 145 |[39m     [90m// Should 
+filter out doc-2[39m
+     [90m 146 |[39m     expect(data[33m.[39mtod
+ay[33m.[39mtotalPatients)[33m.[39mtoBe([35m2[
+39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 147 |[39m     expect
+(data[33m.[39mtoday[33m.[39mwaitingPatients)[3
+3m.[39mtoBe([35m1[39m)[33m;[39m
+     [90m     |[39m                              
+          [31m[1m^[22m[39m
+     [90m 148 |[39m     expect(data[33m.[39mcon
+sultationsList[33m.[39mlength)[33m.[39mtoBe([3
+5m2[39m)[33m;[39m
+     [90m 149 |[39m   })[33m;[39m
+     [90m 150 |[39m[0m
+
+      at Object.<anonymous> 
+(tests/unit/dashboard.test.js:147:40)
+
+PASS tests/unit/patients.test.js
+PASS tests/unit/reports.test.js
+  ΓùÅ Console
+
+    console.error
+      {"jobId":"55555555-5555-5555-5555-55555555555
+5","reportType":"FULL_HISTORY","error":"Database 
+fetch error","stack":"Error: Database fetch 
+error\n    at Object.<anonymous> (D:\\Ayurmedi-back
+end\\tests\\unit\\reports.test.js:145:34)\n    at 
+Promise.then.completed (D:\\Ayurmedi-backend\\node_
+modules\\jest-circus\\build\\utils.js:298:28)\n    
+at new Promise (<anonymous>)\n    at 
+callAsyncCircusFn (D:\\Ayurmedi-backend\\node_modul
+es\\jest-circus\\build\\utils.js:231:10)\n    at 
+_callCircusTest (D:\\Ayurmedi-backend\\node_modules
+\\jest-circus\\build\\run.js:316:40)\n    at 
+processTicksAndRejections 
+(node:internal/process/task_queues:105:5)\n    at 
+_runTest (D:\\Ayurmedi-backend\\node_modules\\jest-
+circus\\build\\run.js:252:3)\n    at 
+_runTestsForDescribeBlock (D:\\Ayurmedi-backend\\no
+de_modules\\jest-circus\\build\\run.js:126:9)\n    
+at _runTestsForDescribeBlock (D:\\Ayurmedi-backend\
+\node_modules\\jest-circus\\build\\run.js:121:9)\n 
+   at run (D:\\Ayurmedi-backend\\node_modules\\jest
+-circus\\build\\run.js:71:3)\n    at 
+runAndTransformResultsToJestFormat (D:\\Ayurmedi-ba
+ckend\\node_modules\\jest-circus\\build\\legacy-cod
+e-todo-rewrite\\jestAdapterInit.js:122:21)\n    at 
+jestAdapter (D:\\Ayurmedi-backend\\node_modules\\je
+st-circus\\build\\legacy-code-todo-rewrite\\jestAda
+pter.js:79:19)\n    at runTestInternal (D:\\Ayurmed
+i-backend\\node_modules\\jest-runner\\build\\runTes
+t.js:367:16)\n    at runTest (D:\\Ayurmedi-backend\
+\node_modules\\jest-runner\\build\\runTest.js:444:3
+4)\n    at Object.worker (D:\\Ayurmedi-backend\\nod
+e_modules\\jest-runner\\build\\testWorker.js:106:12
+)"}
+
+      81 |     } catch (error) {
+      82 |       // Log full error details to 
+CloudWatch without exposing patient PII
+    > 83 |       console.error(JSON.stringify({
+         |               ^
+      84 |         jobId,
+      85 |         reportType,
+      86 |         callerUserId,
+
+      at handler 
+(src/modules/reports/reportWorker.js:83:15)
+      at Object.<anonymous> 
+(tests/unit/reports.test.js:158:5)
+
+PASS tests/unit/common/validators.test.js
+PASS tests/unit/common/auditLogger.test.js
+PASS tests/unit/users.test.js
+PASS tests/unit/common/response.test.js
+PASS tests/unit/common/db.test.js
+PASS tests/unit/tokens.test.js
+PASS tests/unit/hospitals.test.js
+PASS tests/unit/billing.test.js
+PASS tests/unit/auth.test.js
+PASS tests/unit/forms.test.js
+PASS tests/unit/inventory.test.js
+  ΓùÅ Console
+
+    console.log
+      [InventoryAlerts] Processed 4 items, 
+generated 4 operations
+
+      at handler 
+(src/modules/inventory/scheduledAlerts.js:103:13)
+
+PASS tests/unit/common/errors.test.js
+PASS tests/unit/common/auth.test.js
+  ΓùÅ Console
+
+    console.error
+      Authorizer Error: No token provided
+
+      42 |     });
+      43 |   } catch (error) {
+    > 44 |     console.error("Authorizer Error:", 
+error.message);
+         |             ^
+      45 |     throw new Error("Unauthorized");
+      46 |   }
+      47 | };
+
+      at authorizer (src/common/auth.js:44:13)
+      at Object.<anonymous> 
+(tests/unit/common/auth.test.js:41:20)
+
+    console.error
+      Authorizer Error: invalid token
+
+      42 |     });
+      43 |   } catch (error) {
+    > 44 |     console.error("Authorizer Error:", 
+error.message);
+         |             ^
+      45 |     throw new Error("Unauthorized");
+      46 |   }
+      47 | };
+
+      at authorizer (src/common/auth.js:44:13)
+      at Object.<anonymous> 
+(tests/unit/common/auth.test.js:47:7)
+
+PASS tests/unit/doctors.test.js
+
+Summary of all failing tests
+FAIL tests/unit/prescriptions.test.js
+  ΓùÅ prescriptions module ΓÇ║ Create 
+prescription: valid input saves prescription, 
+deducts inventory via transactWrite
+
+    expect(received).toBe(expected) // Object.is 
+equality
+
+    Expected: 2
+    Received: 20
+
+    [0m [90m 89 |[39m     expect(transactArgs[3
+3m.[39m[33mTransactItems[39m[33m.[39mlength)[
+33m.[39mtoBe([35m3[39m)[33m;[39m
+     [90m 90 |[39m     expect(transactArgs[33m.
+[39m[33mTransactItems[39m[[35m1[39m][33m.[39m
+[33mUpdate[39m[33m.[39m[33mUpdateExpression[3
+9m)[33m.[39mtoContain([32m"currentStock - 
+:qty"[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 91 |[39m     expect(
+transactArgs[33m.[39m[33mTransactItems[39m[[35
+m1[39m][33m.[39m[33mUpdate[39m[33m.[39m[33m
+ExpressionAttributeValues[39m[[32m":qty"[39m])[
+33m.[39mtoBe([35m2[39m)[33m;[39m
+     [90m    |[39m                               
+                                                   
+  [31m[1m^[22m[39m
+     [90m 92 |[39m   })[33m;[39m
+     [90m 93 |[39m
+     [90m 94 |[39m   it([32m"Inventory 
+insufficient: returns 409 with correct item 
+details when stock too low"[39m[33m,[39m 
+[36masync[39m () [33m=>[39m {[0m
+
+      at Object.<anonymous> 
+(tests/unit/prescriptions.test.js:91:84)
+
+FAIL tests/unit/branches.test.js
+  ΓùÅ branch module ΓÇ║ update 
+323e4567-e89b-12d3-a456-426614174002: updates 
+323e4567-e89b-12d3-a456-426614174002 data
+
+    
+expect(jest.fn()).toHaveBeenCalledTimes(expected)
+
+    Expected number of calls: 1
+    Received number of calls: 2
+
+    [0m [90m 70 |[39m     expect(res[33m.[39ms
+tatusCode)[33m.[39mtoBe([35m200[39m)[33m;[39m
+     [90m 71 |[39m     expect(db[33m.[39mupdate
+)[33m.[39mtoHaveBeenCalledTimes([35m1[39m)[33m
+;[39m
+    [31m[1m>[22m[39m[90m 72 |[39m     expect(
+db[33m.[39mput)[33m.[39mtoHaveBeenCalledTimes(
+[35m1[39m)[33m;[39m
+     [90m    |[39m                    
+[31m[1m^[22m[39m
+     [90m 73 |[39m   })[33m;[39m
+     [90m 74 |[39m })[33m;[39m
+     [90m 75 |[39m[0m
+
+      at Object.<anonymous> 
+(tests/unit/branches.test.js:72:20)
+
+FAIL tests/unit/panchakarma.test.js
+  ΓùÅ panchakarma module ΓÇ║ Complete plan: sets 
+status=COMPLETED
+
+    expect(received).toBe(expected) // Object.is 
+equality
+
+    Expected: 200
+    Received: 409
+
+    [0m [90m 225 |[39m
+     [90m 226 |[39m     [36mconst[39m res 
+[33m=[39m [36mawait[39m 
+completePanchakarma(event)[33m;[39m
+    [31m[1m>[22m[39m[90m 227 |[39m     expect
+(res[33m.[39mstatusCode)[33m.[39mtoBe([35m200
+[39m)[33m;[39m
+     [90m     |[39m                            
+[31m[1m^[22m[39m
+     [90m 228 |[39m     [36mconst[39m 
+updateCall [33m=[39m db[33m.[39mupdate[33m.[3
+9mmock[33m.[39mcalls[[35m0[39m][[35m0[39m][3
+3m;[39m
+     [90m 229 |[39m     expect(updateCall[33m.[
+39m[33mExpressionAttributeValues[39m[[32m":statu
+s"[39m])[33m.[39mtoBe([32m"COMPLETED"[39m)[33
+m;[39m
+     [90m 230 |[39m   })[33m;[39m[0m
+
+      at Object.<anonymous> 
+(tests/unit/panchakarma.test.js:227:28)
+
+FAIL tests/unit/consultations.test.js
+  ΓùÅ consultations module ΓÇ║ Create 
+consultation: creates with IN_PROGRESS status, 
+links tokenId
+
+    expect(received).toBe(expected) // Object.is 
+equality
+
+    Expected: 201
+    Received: 400
+
+    [0m [90m 63 |[39m     
+     [90m 64 |[39m     [36mconst[39m res 
+[33m=[39m [36mawait[39m 
+createConsultation(event)[33m;[39m
+    [31m[1m>[22m[39m[90m 65 |[39m     expect(
+res[33m.[39mstatusCode)[33m.[39mtoBe([35m201[
+39m)[33m;[39m
+     [90m    |[39m                            
+[31m[1m^[22m[39m
+     [90m 66 |[39m     
+     [90m 67 |[39m     [36mconst[39m body 
+[33m=[39m [33mJSON[39m[33m.[39mparse(res[33m
+.[39mbody)[33m;[39m
+     [90m 68 |[39m     expect(body[33m.[39mdata
+[33m.[39mstatus)[33m.[39mtoBe([32m"IN_PROGRESS
+"[39m)[33m;[39m[0m
+
+      at Object.<anonymous> 
+(tests/unit/consultations.test.js:65:28)
+
+FAIL tests/unit/dashboard.test.js
+  ΓùÅ dashboard module ΓÇ║ Doctor dashboard: 
+scoped to doctorId from JWT, does not return other 
+doctors' data
+
+    expect(received).toBe(expected) // Object.is 
+equality
+
+    Expected: 1
+    Received: 2
+
+    [0m [90m 145 |[39m     [90m// Should 
+filter out doc-2[39m
+     [90m 146 |[39m     expect(data[33m.[39mtod
+ay[33m.[39mtotalPatients)[33m.[39mtoBe([35m2[
+39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 147 |[39m     expect
+(data[33m.[39mtoday[33m.[39mwaitingPatients)[3
+3m.[39mtoBe([35m1[39m)[33m;[39m
+     [90m     |[39m                              
+          [31m[1m^[22m[39m
+     [90m 148 |[39m     expect(data[33m.[39mcon
+sultationsList[33m.[39mlength)[33m.[39mtoBe([3
+5m2[39m)[33m;[39m
+     [90m 149 |[39m   })[33m;[39m
+     [90m 150 |[39m[0m
+
+      at Object.<anonymous> 
+(tests/unit/dashboard.test.js:147:40)
+
+
+Test Suites: 5 failed, 16 passed, 21 total
+Tests:       5 failed, 125 passed, 130 total
+Snapshots:   0 total
+Time:        6.911 s, estimated 7 s
+Ran all test suites matching /tests\\unit/i.

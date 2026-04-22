@@ -1,0 +1,281 @@
+# Patients, Consultations, Prescriptions, History Stack
+service: ayurmedi-clinical
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ap-south-1
+  stage: ${opt:stage, 'dev'}
+  tracing:
+    lambda: true
+    apiGateway: true
+  timeout: 29
+  memorySize: 512
+  environment:
+    STAGE: ${self:provider.stage}
+    TABLE_NAME: ${ssm:/ayurmedi/${self:provider.stage}/TABLE_NAME, 'AyurMediTable-dev'}
+    COGNITO_USER_POOL_ID: ${ssm:/ayurmedi/${self:provider.stage}/COGNITO_USER_POOL_ID, 'ap-south-1_mockPool1'}
+    COGNITO_APP_CLIENT_ID: ${ssm:/ayurmedi/${self:provider.stage}/COGNITO_APP_CLIENT_ID, 'mockClient1234'}
+    S3_BUCKET: ${ssm:/ayurmedi/${self:provider.stage}/S3_BUCKET, 'mock-bucket'}
+    REDIS_URL: ${ssm:/ayurmedi/${self:provider.stage}/REDIS_URL, 'localhost'}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:GetItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:TransactWrite
+          Resource:
+            - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TABLE_NAME}
+            - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TABLE_NAME}/index/*
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource:
+            - arn:aws:logs:${self:provider.region}:*:log-group:/aws/lambda/*:*:*
+        - Effect: Allow
+          Action:
+            - xray:PutTraceSegments
+            - xray:PutTelemetryRecords
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - ssm:GetParameter
+          Resource:
+            - arn:aws:ssm:${self:provider.region}:*:parameter/ayurmedi/${self:provider.stage}/*
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+            - s3:GetObject
+          Resource:
+            - arn:aws:s3:::${self:provider.environment.S3_BUCKET}/hospitals/*
+        - Effect: Allow
+          Action:
+            - cognito-idp:AdminGetUser
+          Resource: "*"
+
+functions:
+  createPatient:
+    handler: src/modules/patients/handler.createPatient
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/branches/{branchId}/patients
+          method: post
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  listPatients:
+    handler: src/modules/patients/handler.listPatients
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/branches/{branchId}/patients
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  getPatient:
+    handler: src/modules/patients/handler.getPatient
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/branches/{branchId}/patients/{patientId}
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  updatePatient:
+    handler: src/modules/patients/handler.updatePatient
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/branches/{branchId}/patients/{patientId}
+          method: put
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  searchPatients:
+    handler: src/modules/patients/handler.searchPatients
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/patients/search
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  addHistory:
+    handler: src/modules/patients/handler.addHistory
+    events:
+      - http:
+          path: /patients/{patientId}/history
+          method: post
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  getHistoryList:
+    handler: src/modules/patients/handler.getHistoryList
+    events:
+      - http:
+          path: /patients/{patientId}/history
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  getHistoryDetail:
+    handler: src/modules/patients/handler.getHistoryDetail
+    events:
+      - http:
+          path: /patients/{patientId}/history/{historyId}
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  createConsultation:
+    handler: src/modules/consultations/handler.createConsultation
+    events:
+      - http:
+          path: /patients/{patientId}/consultations
+          method: post
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  getConsultations:
+    handler: src/modules/consultations/handler.getConsultations
+    events:
+      - http:
+          path: /patients/{patientId}/consultations
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  getConsultationDetail:
+    handler: src/modules/consultations/handler.getConsultationDetail
+    events:
+      - http:
+          path: /patients/{patientId}/consultations/{consultId}
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  updateConsultation:
+    handler: src/modules/consultations/handler.updateConsultation
+    events:
+      - http:
+          path: /patients/{patientId}/consultations/{consultId}
+          method: put
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  completeConsultation:
+    handler: src/modules/consultations/handler.completeConsultation
+    events:
+      - http:
+          path: /patients/{patientId}/consultations/{consultId}/complete
+          method: post
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  createPrescription:
+    handler: src/modules/prescriptions/handler.createPrescription
+    events:
+      - http:
+          path: /patients/{patientId}/consultations/{consultId}/prescriptions
+          method: post
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  getPrescriptions:
+    handler: src/modules/prescriptions/handler.getPrescriptions
+    events:
+      - http:
+          path: /patients/{patientId}/prescriptions
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  getPrescriptionDetail:
+    handler: src/modules/prescriptions/handler.getPrescriptionDetail
+    events:
+      - http:
+          path: /patients/{patientId}/prescriptions/{rxId}
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  updatePrescription:
+    handler: src/modules/prescriptions/handler.updatePrescription
+    events:
+      - http:
+          path: /patients/{patientId}/prescriptions/{rxId}
+          method: put
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  getPrescriptionPdf:
+    handler: src/modules/prescriptions/handler.getPrescriptionPdf
+    events:
+      - http:
+          path: /prescriptions/{rxId}/pdf
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+resources:
+  Resources:
+    SharedAuthorizer:
+      Type: AWS::ApiGateway::Authorizer
+      Properties:
+        Name: cognitoAuthorizer-${self:provider.stage}
+        Type: TOKEN
+        AuthorizerUri: arn:aws:apigateway:${self:provider.region}:lambda:path/2015-03-31/functions/${cf:ayurmedi-auth-${self:provider.stage}.AuthorizerLambdaArn}/invocations
+        IdentitySource: method.request.header.Authorization
+        AuthorizerResultTtlInSeconds: 300
+        RestApiId: !Ref ApiGatewayRestApi
+
+    AuthorizerPermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        FunctionName: ${cf:ayurmedi-auth-${self:provider.stage}.AuthorizerLambdaArn}
+        Action: lambda:InvokeFunction
+        Principal: apigateway.amazonaws.com
+        SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayRestApi}/*/*"

@@ -1,0 +1,106 @@
+(node:20000) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+FAIL tests/e2e/phase1-auth.e2e.js
+  Phase 1 — Auth
+    × POST /auth/register-hospital → 201 with hospitalId (1 ms)
+    × POST /auth/login → 200 with tokens (1 ms)
+    × POST /auth/login with wrong password → 401
+    × POST /auth/refresh → 200 with new accessToken
+    × GET /protected route without token → 401
+    × POST /auth/logout → 200
+
+  ● Phase 1 — Auth › POST /auth/register-hospital → 201 with hospitalId
+
+    E2E setup: login failed 401 — {"success":false,"error":"User not found"}
+
+    [0m [90m 106 |[39m
+     [90m 107 |[39m   [36mif[39m (loginRes[33m.[39mstatus [33m!==[39m [35m200[39m) {
+    [31m[1m>[22m[39m[90m 108 |[39m     [36mthrow[39m [36mnew[39m [33mError[39m([32m`E2E setup: login failed ${loginRes.status} — ${JSON.stringify(loginRes.body)}`[39m)[33m;[39m
+     [90m     |[39m           [31m[1m^[22m[39m
+     [90m 109 |[39m   }
+     [90m 110 |[39m
+     [90m 111 |[39m   state[33m.[39maccessToken [33m=[39m loginRes[33m.[39mbody[33m.[39mdata[33m?[39m[33m.[39maccessToken [33m||[39m loginRes[33m.[39mbody[33m.[39maccessToken[33m;[39m[0m
+
+      at setupE2E (tests/e2e/setup.js:108:11)
+      at Object.<anonymous> (tests/e2e/phase1-auth.e2e.js:18:13)
+
+  ● Phase 1 — Auth › POST /auth/login → 200 with tokens
+
+    E2E setup: login failed 401 — {"success":false,"error":"User not found"}
+
+    [0m [90m 106 |[39m
+     [90m 107 |[39m   [36mif[39m (loginRes[33m.[39mstatus [33m!==[39m [35m200[39m) {
+    [31m[1m>[22m[39m[90m 108 |[39m     [36mthrow[39m [36mnew[39m [33mError[39m([32m`E2E setup: login failed ${loginRes.status} — ${JSON.stringify(loginRes.body)}`[39m)[33m;[39m
+     [90m     |[39m           [31m[1m^[22m[39m
+     [90m 109 |[39m   }
+     [90m 110 |[39m
+     [90m 111 |[39m   state[33m.[39maccessToken [33m=[39m loginRes[33m.[39mbody[33m.[39mdata[33m?[39m[33m.[39maccessToken [33m||[39m loginRes[33m.[39mbody[33m.[39maccessToken[33m;[39m[0m
+
+      at setupE2E (tests/e2e/setup.js:108:11)
+      at Object.<anonymous> (tests/e2e/phase1-auth.e2e.js:18:13)
+
+  ● Phase 1 — Auth › POST /auth/login with wrong password → 401
+
+    E2E setup: login failed 401 — {"success":false,"error":"User not found"}
+
+    [0m [90m 106 |[39m
+     [90m 107 |[39m   [36mif[39m (loginRes[33m.[39mstatus [33m!==[39m [35m200[39m) {
+    [31m[1m>[22m[39m[90m 108 |[39m     [36mthrow[39m [36mnew[39m [33mError[39m([32m`E2E setup: login failed ${loginRes.status} — ${JSON.stringify(loginRes.body)}`[39m)[33m;[39m
+     [90m     |[39m           [31m[1m^[22m[39m
+     [90m 109 |[39m   }
+     [90m 110 |[39m
+     [90m 111 |[39m   state[33m.[39maccessToken [33m=[39m loginRes[33m.[39mbody[33m.[39mdata[33m?[39m[33m.[39maccessToken [33m||[39m loginRes[33m.[39mbody[33m.[39maccessToken[33m;[39m[0m
+
+      at setupE2E (tests/e2e/setup.js:108:11)
+      at Object.<anonymous> (tests/e2e/phase1-auth.e2e.js:18:13)
+
+  ● Phase 1 — Auth › POST /auth/refresh → 200 with new accessToken
+
+    E2E setup: login failed 401 — {"success":false,"error":"User not found"}
+
+    [0m [90m 106 |[39m
+     [90m 107 |[39m   [36mif[39m (loginRes[33m.[39mstatus [33m!==[39m [35m200[39m) {
+    [31m[1m>[22m[39m[90m 108 |[39m     [36mthrow[39m [36mnew[39m [33mError[39m([32m`E2E setup: login failed ${loginRes.status} — ${JSON.stringify(loginRes.body)}`[39m)[33m;[39m
+     [90m     |[39m           [31m[1m^[22m[39m
+     [90m 109 |[39m   }
+     [90m 110 |[39m
+     [90m 111 |[39m   state[33m.[39maccessToken [33m=[39m loginRes[33m.[39mbody[33m.[39mdata[33m?[39m[33m.[39maccessToken [33m||[39m loginRes[33m.[39mbody[33m.[39maccessToken[33m;[39m[0m
+
+      at setupE2E (tests/e2e/setup.js:108:11)
+      at Object.<anonymous> (tests/e2e/phase1-auth.e2e.js:18:13)
+
+  ● Phase 1 — Auth › GET /protected route without token → 401
+
+    E2E setup: login failed 401 — {"success":false,"error":"User not found"}
+
+    [0m [90m 106 |[39m
+     [90m 107 |[39m   [36mif[39m (loginRes[33m.[39mstatus [33m!==[39m [35m200[39m) {
+    [31m[1m>[22m[39m[90m 108 |[39m     [36mthrow[39m [36mnew[39m [33mError[39m([32m`E2E setup: login failed ${loginRes.status} — ${JSON.stringify(loginRes.body)}`[39m)[33m;[39m
+     [90m     |[39m           [31m[1m^[22m[39m
+     [90m 109 |[39m   }
+     [90m 110 |[39m
+     [90m 111 |[39m   state[33m.[39maccessToken [33m=[39m loginRes[33m.[39mbody[33m.[39mdata[33m?[39m[33m.[39maccessToken [33m||[39m loginRes[33m.[39mbody[33m.[39maccessToken[33m;[39m[0m
+
+      at setupE2E (tests/e2e/setup.js:108:11)
+      at Object.<anonymous> (tests/e2e/phase1-auth.e2e.js:18:13)
+
+  ● Phase 1 — Auth › POST /auth/logout → 200
+
+    E2E setup: login failed 401 — {"success":false,"error":"User not found"}
+
+    [0m [90m 106 |[39m
+     [90m 107 |[39m   [36mif[39m (loginRes[33m.[39mstatus [33m!==[39m [35m200[39m) {
+    [31m[1m>[22m[39m[90m 108 |[39m     [36mthrow[39m [36mnew[39m [33mError[39m([32m`E2E setup: login failed ${loginRes.status} — ${JSON.stringify(loginRes.body)}`[39m)[33m;[39m
+     [90m     |[39m           [31m[1m^[22m[39m
+     [90m 109 |[39m   }
+     [90m 110 |[39m
+     [90m 111 |[39m   state[33m.[39maccessToken [33m=[39m loginRes[33m.[39mbody[33m.[39mdata[33m?[39m[33m.[39maccessToken [33m||[39m loginRes[33m.[39mbody[33m.[39maccessToken[33m;[39m[0m
+
+      at setupE2E (tests/e2e/setup.js:108:11)
+      at Object.<anonymous> (tests/e2e/phase1-auth.e2e.js:18:13)
+
+Test Suites: 1 failed, 1 total
+Tests:       6 failed, 6 total
+Snapshots:   0 total
+Time:        1.566 s, estimated 2 s
+Ran all test suites matching /tests\\e2e\\phase1-auth.e2e.js/i.

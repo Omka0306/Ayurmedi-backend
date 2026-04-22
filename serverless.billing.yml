@@ -1,0 +1,259 @@
+# Billing & Inventory Stack
+service: ayurmedi-billing
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ap-south-1
+  stage: ${opt:stage, 'dev'}
+  tracing:
+    lambda: true
+    apiGateway: true
+  timeout: 29
+  memorySize: 512
+  environment:
+    STAGE: ${self:provider.stage}
+    TABLE_NAME: ${ssm:/ayurmedi/${self:provider.stage}/TABLE_NAME, 'AyurMediTable-dev'}
+    COGNITO_USER_POOL_ID: ${ssm:/ayurmedi/${self:provider.stage}/COGNITO_USER_POOL_ID, 'ap-south-1_mockPool1'}
+    COGNITO_APP_CLIENT_ID: ${ssm:/ayurmedi/${self:provider.stage}/COGNITO_APP_CLIENT_ID, 'mockClient1234'}
+    S3_BUCKET: ${ssm:/ayurmedi/${self:provider.stage}/S3_BUCKET, 'mock-bucket'}
+    REDIS_URL: ${ssm:/ayurmedi/${self:provider.stage}/REDIS_URL, 'localhost'}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:GetItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:TransactWrite
+          Resource:
+            - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TABLE_NAME}
+            - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TABLE_NAME}/index/*
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource:
+            - arn:aws:logs:${self:provider.region}:*:log-group:/aws/lambda/*:*:*
+        - Effect: Allow
+          Action:
+            - xray:PutTraceSegments
+            - xray:PutTelemetryRecords
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - ssm:GetParameter
+          Resource:
+            - arn:aws:ssm:${self:provider.region}:*:parameter/ayurmedi/${self:provider.stage}/*
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+            - s3:GetObject
+          Resource:
+            - arn:aws:s3:::${self:provider.environment.S3_BUCKET}/hospitals/*
+        - Effect: Allow
+          Action:
+            - cognito-idp:AdminGetUser
+          Resource: "*"
+
+functions:
+  createBill:
+    handler: src/modules/billing/handler.createBill
+    events:
+      - http:
+          path: /patients/{patientId}/bills
+          method: post
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  listBills:
+    handler: src/modules/billing/handler.listBills
+    events:
+      - http:
+          path: /patients/{patientId}/bills
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  getBillDetail:
+    handler: src/modules/billing/handler.getBillDetail
+    events:
+      - http:
+          path: /patients/{patientId}/bills/{billId}
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  updateBill:
+    handler: src/modules/billing/handler.updateBill
+    events:
+      - http:
+          path: /patients/{patientId}/bills/{billId}
+          method: put
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  addPayment:
+    handler: src/modules/billing/handler.addPayment
+    events:
+      - http:
+          path: /patients/{patientId}/bills/{billId}/payments
+          method: post
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  getBillPdf:
+    handler: src/modules/billing/handler.getBillPdf
+    events:
+      - http:
+          path: /patients/{patientId}/bills/{billId}/pdf
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  getHospitalBillSummary:
+    handler: src/modules/billing/handler.getHospitalBillSummary
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/bills/summary
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  createInventoryItem:
+    handler: src/modules/inventory/handler.createInventoryItem
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/inventory
+          method: post
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  listInventory:
+    handler: src/modules/inventory/handler.listInventory
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/inventory
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  getInventoryItem:
+    handler: src/modules/inventory/handler.getInventoryItem
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/inventory/{itemId}
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  updateInventoryItem:
+    handler: src/modules/inventory/handler.updateInventoryItem
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/inventory/{itemId}
+          method: put
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  deleteInventoryItem:
+    handler: src/modules/inventory/handler.deleteInventoryItem
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/inventory/{itemId}
+          method: delete
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  stockIn:
+    handler: src/modules/inventory/handler.stockIn
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/inventory/{itemId}/stock-in
+          method: post
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  stockAdjust:
+    handler: src/modules/inventory/handler.stockAdjust
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/inventory/{itemId}/stock-adjust
+          method: post
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  getLowStockAlerts:
+    handler: src/modules/inventory/handler.getLowStockAlerts
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/inventory/alerts/low-stock
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  getExpiryAlerts:
+    handler: src/modules/inventory/handler.getExpiryAlerts
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/inventory/alerts/expiry
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+resources:
+  Resources:
+    SharedAuthorizer:
+      Type: AWS::ApiGateway::Authorizer
+      Properties:
+        Name: cognitoAuthorizer-${self:provider.stage}
+        Type: TOKEN
+        AuthorizerUri: arn:aws:apigateway:${self:provider.region}:lambda:path/2015-03-31/functions/${cf:ayurmedi-auth-${self:provider.stage}.AuthorizerLambdaArn}/invocations
+        IdentitySource: method.request.header.Authorization
+        AuthorizerResultTtlInSeconds: 300
+        RestApiId: !Ref ApiGatewayRestApi
+
+    AuthorizerPermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        FunctionName: ${cf:ayurmedi-auth-${self:provider.stage}.AuthorizerLambdaArn}
+        Action: lambda:InvokeFunction
+        Principal: apigateway.amazonaws.com
+        SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayRestApi}/*/*"

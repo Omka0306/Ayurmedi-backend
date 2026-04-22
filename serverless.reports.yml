@@ -1,0 +1,266 @@
+# Reports, Dashboard & Background Workers Stack
+service: ayurmedi-reports
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ap-south-1
+  stage: ${opt:stage, 'dev'}
+  tracing:
+    lambda: true
+    apiGateway: true
+  timeout: 29
+  memorySize: 512
+  environment:
+    STAGE: ${self:provider.stage}
+    TABLE_NAME: ${ssm:/ayurmedi/${self:provider.stage}/TABLE_NAME, 'AyurMediTable-dev'}
+    COGNITO_USER_POOL_ID: ${ssm:/ayurmedi/${self:provider.stage}/COGNITO_USER_POOL_ID, 'ap-south-1_mockPool1'}
+    COGNITO_APP_CLIENT_ID: ${ssm:/ayurmedi/${self:provider.stage}/COGNITO_APP_CLIENT_ID, 'mockClient1234'}
+    S3_BUCKET: ${ssm:/ayurmedi/${self:provider.stage}/S3_BUCKET, 'mock-bucket'}
+    SQS_QUEUE_URL: https://sqs.ap-south-1.amazonaws.com/016963913066/ayurmedi-reports-${self:provider.stage}
+    REDIS_URL: ${ssm:/ayurmedi/${self:provider.stage}/REDIS_URL, 'localhost'}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:GetItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            - dynamodb:Query
+            - dynamodb:Scan
+          Resource:
+            - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TABLE_NAME}
+            - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TABLE_NAME}/index/*
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource:
+            - arn:aws:logs:${self:provider.region}:*:log-group:/aws/lambda/*:*:*
+        - Effect: Allow
+          Action:
+            - xray:PutTraceSegments
+            - xray:PutTelemetryRecords
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - ssm:GetParameter
+          Resource:
+            - arn:aws:ssm:${self:provider.region}:*:parameter/ayurmedi/${self:provider.stage}/*
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+            - s3:GetObject
+          Resource:
+            - arn:aws:s3:::${self:provider.environment.S3_BUCKET}/hospitals/*
+        - Effect: Allow
+          Action:
+            - sqs:SendMessage
+            - sqs:ReceiveMessage
+            - sqs:DeleteMessage
+            - sqs:GetQueueAttributes
+          Resource:
+            - arn:aws:sqs:${self:provider.region}:*:ayurmedi-reports-${self:provider.stage}
+        - Effect: Allow
+          Action:
+            - sqs:SendMessage
+          Resource:
+            - arn:aws:sqs:${self:provider.region}:*:ayurmedi-reports-dlq-${self:provider.stage}
+        - Effect: Allow
+          Action:
+            - cognito-idp:AdminGetUser
+          Resource: "*"
+
+functions:
+  reportWorker:
+    handler: src/modules/reports/reportWorker.handler
+    timeout: 29
+    memorySize: 1024
+    events:
+      - sqs:
+          arn:
+            Fn::Join:
+              - ""
+              - - "arn:aws:sqs:"
+                - Ref: AWS::Region
+                - ":"
+                - Ref: AWS::AccountId
+                - ":ayurmedi-reports-"
+                - ${self:provider.stage}
+          batchSize: 1
+
+  inventoryAlertScheduler:
+    handler: src/modules/inventory/scheduledAlerts.handler
+    timeout: 60
+    memorySize: 512
+    events:
+      - schedule:
+          rate: cron(0 9 * * ? *)
+          input:
+            alertType: daily_digest
+
+  getFullHistoryReport:
+    handler: src/modules/reports/handler.getFullHistoryReport
+    events:
+      - http:
+          path: /patients/{patientId}/reports/full-history/pdf
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  getVisitSummaryReport:
+    handler: src/modules/reports/handler.getVisitSummaryReport
+    events:
+      - http:
+          path: /patients/{patientId}/reports/visit-summary/pdf
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  getDischargeSummary:
+    handler: src/modules/reports/handler.getDischargeSummary
+    events:
+      - http:
+          path: /patients/{patientId}/reports/discharge-summary/pdf
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  getDailyOpdReport:
+    handler: src/modules/reports/handler.getDailyOpdReport
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/reports/daily-opd
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  getRevenueReport:
+    handler: src/modules/reports/handler.getRevenueReport
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/reports/revenue
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  getInventoryUsageReport:
+    handler: src/modules/reports/handler.getInventoryUsageReport
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/reports/inventory-usage
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  getDoctorLoadReport:
+    handler: src/modules/reports/handler.getDoctorLoadReport
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/reports/doctor-load
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  getLowStockReport:
+    handler: src/modules/reports/handler.getLowStockReport
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/reports/low-stock
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  getExpiryReport:
+    handler: src/modules/reports/handler.getExpiryReport
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/reports/expiry
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  getReportJobStatus:
+    handler: src/modules/reports/handler.getReportJobStatus
+    events:
+      - http:
+          path: /reports/jobs/{jobId}
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  getAdminDashboard:
+    handler: src/modules/dashboard/handler.getAdminDashboard
+    events:
+      - http:
+          path: /dashboard/admin
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  getDoctorDashboard:
+    handler: src/modules/dashboard/handler.getDoctorDashboard
+    events:
+      - http:
+          path: /dashboard/doctor
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  getReceptionDashboard:
+    handler: src/modules/dashboard/handler.getReceptionDashboard
+    events:
+      - http:
+          path: /dashboard/reception
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+resources:
+  Resources:
+    SharedAuthorizer:
+      Type: AWS::ApiGateway::Authorizer
+      Properties:
+        Name: cognitoAuthorizer-${self:provider.stage}
+        Type: TOKEN
+        AuthorizerUri: arn:aws:apigateway:${self:provider.region}:lambda:path/2015-03-31/functions/${cf:ayurmedi-auth-${self:provider.stage}.AuthorizerLambdaArn}/invocations
+        IdentitySource: method.request.header.Authorization
+        AuthorizerResultTtlInSeconds: 300
+        RestApiId: !Ref ApiGatewayRestApi
+
+    AuthorizerPermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        FunctionName: ${cf:ayurmedi-auth-${self:provider.stage}.AuthorizerLambdaArn}
+        Action: lambda:InvokeFunction
+        Principal: apigateway.amazonaws.com
+        SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayRestApi}/*/*"

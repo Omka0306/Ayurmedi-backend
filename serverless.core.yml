@@ -1,0 +1,243 @@
+# Core Functions Stack (Hospital, Branches, Doctors, Forms)
+service: ayurmedi-core
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ap-south-1
+  stage: ${opt:stage, 'dev'}
+  tracing:
+    lambda: true
+    apiGateway: true
+  timeout: 29
+  memorySize: 512
+  environment:
+    STAGE: ${self:provider.stage}
+    TABLE_NAME: ${ssm:/ayurmedi/${self:provider.stage}/TABLE_NAME, 'AyurMediTable-dev'}
+    COGNITO_USER_POOL_ID: ${ssm:/ayurmedi/${self:provider.stage}/COGNITO_USER_POOL_ID}
+    COGNITO_APP_CLIENT_ID: ${ssm:/ayurmedi/${self:provider.stage}/COGNITO_CLIENT_ID}
+    S3_BUCKET: ${ssm:/ayurmedi/${self:provider.stage}/S3_BUCKET}
+    REDIS_URL: ${ssm:/ayurmedi/${self:provider.stage}/REDIS_URL, 'localhost'}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:GetItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            - dynamodb:Query
+            - dynamodb:Scan
+          Resource:
+            - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TABLE_NAME}
+            - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TABLE_NAME}/index/*
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+            - s3:GetObject
+            - s3:DeleteObject
+          Resource:
+            - arn:aws:s3:::${self:provider.environment.S3_BUCKET}/hospitals/*
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource:
+            - arn:aws:logs:${self:provider.region}:*:log-group:/aws/lambda/*:*:*
+        - Effect: Allow
+          Action:
+            - xray:PutTraceSegments
+            - xray:PutTelemetryRecords
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - cognito-idp:AdminGetUser
+          Resource: "*"
+
+functions:
+  getHospital:
+    handler: src/modules/hospitals/handler.getHospital
+    events:
+      - http:
+          path: /hospitals/{hospitalId}
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  updateHospital:
+    handler: src/modules/hospitals/handler.updateHospital
+    events:
+      - http:
+          path: /hospitals/{hospitalId}
+          method: put
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  createBranch:
+    handler: src/modules/branches/handler.createBranch
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/branches
+          method: post
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  listBranches:
+    handler: src/modules/branches/handler.listBranches
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/branches
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  updateBranch:
+    handler: src/modules/branches/handler.updateBranch
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/branches/{branchId}
+          method: put
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  createDoctor:
+    handler: src/modules/doctors/handler.createDoctor
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/doctors
+          method: post
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  listDoctors:
+    handler: src/modules/doctors/handler.listDoctors
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/doctors
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  updateDoctor:
+    handler: src/modules/doctors/handler.updateDoctor
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/doctors/{doctorId}
+          method: put
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  deleteDoctor:
+    handler: src/modules/doctors/handler.deleteDoctor
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/doctors/{doctorId}
+          method: delete
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  createForm:
+    handler: src/modules/forms/handler.createForm
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/forms
+          method: post
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  listForms:
+    handler: src/modules/forms/handler.listForms
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/forms
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  getForm:
+    handler: src/modules/forms/handler.getForm
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/forms/{formId}
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  updateForm:
+    handler: src/modules/forms/handler.updateForm
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/forms/{formId}
+          method: put
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  deleteForm:
+    handler: src/modules/forms/handler.deleteForm
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/forms/{formId}
+          method: delete
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  publishForm:
+    handler: src/modules/forms/handler.publishForm
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/forms/{formId}/publish
+          method: post
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+resources:
+  Resources:
+    SharedAuthorizer:
+      Type: AWS::ApiGateway::Authorizer
+      Properties:
+        Name: cognitoAuthorizer-${self:provider.stage}
+        Type: TOKEN
+        AuthorizerUri: arn:aws:apigateway:${self:provider.region}:lambda:path/2015-03-31/functions/${cf:ayurmedi-auth-${self:provider.stage}.AuthorizerLambdaArn}/invocations
+        IdentitySource: method.request.header.Authorization
+        AuthorizerResultTtlInSeconds: 300
+        RestApiId: !Ref ApiGatewayRestApi
+
+    AuthorizerPermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        FunctionName: ${cf:ayurmedi-auth-${self:provider.stage}.AuthorizerLambdaArn}
+        Action: lambda:InvokeFunction
+        Principal: apigateway.amazonaws.com
+        SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayRestApi}/*/*"

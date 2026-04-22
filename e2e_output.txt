@@ -1,0 +1,324 @@
+﻿node : (node:19892) ExperimentalWarning: VM 
+Modules is an experimental feature and might 
+change at any time
+At line:1 char:1
++ node --experimental-vm-modules 
+node_modules/jest/bin/jest.js tests/e2 ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ((node 
+   :19892) Ex...nge at any time:String) [], Remot  
+  eException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+(Use `node --trace-warnings ...` to show where the 
+warning was created)
+FAIL tests/e2e/phase4-consultation.e2e.js
+  ΓùÅ Phase 4 ΓÇö Consultation & Prescription ΓÇ║ 
+POST /patients/:patientId/consultations ΓåÆ 201 
+with consultId
+
+    AggregateError:
+
+
+
+  ΓùÅ Phase 4 ΓÇö Consultation & Prescription ΓÇ║ 
+GET /patients/:patientId/consultations ΓåÆ 200 
+includes new consultation
+
+    AggregateError:
+
+
+
+  ΓùÅ Phase 4 ΓÇö Consultation & Prescription ΓÇ║ 
+PUT /patients/:patientId/consultations/:consultId 
+ΓåÆ 200 updates clinical data
+
+    AggregateError:
+
+
+
+  ΓùÅ Phase 4 ΓÇö Consultation & Prescription ΓÇ║ 
+GET /patients/:patientId/consultations/:consultId 
+ΓåÆ 200 correct detail
+
+    AggregateError:
+
+
+
+  ΓùÅ Phase 4 ΓÇö Consultation & Prescription ΓÇ║ 
+POST /patients/:patientId/consultations/:consultId/
+complete ΓåÆ 200 status=COMPLETED
+
+    AggregateError:
+
+
+
+  ΓùÅ Phase 4 ΓÇö Consultation & Prescription ΓÇ║ 
+POST /consultations/:consultId/prescriptions ΓåÆ 
+201 creates prescription
+
+    AggregateError:
+
+
+
+  ΓùÅ Phase 4 ΓÇö Consultation & Prescription ΓÇ║ 
+GET /consultations/:consultId/prescriptions ΓåÆ 
+200 includes prescription
+
+    AggregateError:
+
+
+
+FAIL tests/e2e/phase5-billing.e2e.js
+  ΓùÅ Phase 5 ΓÇö Billing & Payments ΓÇ║ POST 
+/hospitals/:hId/bills ΓåÆ 201 creates bill with 
+line items
+
+    AggregateError:
+
+
+
+  ΓùÅ Phase 5 ΓÇö Billing & Payments ΓÇ║ GET 
+/hospitals/:hId/bills/:billId ΓåÆ 200 with correct 
+shape
+
+    AggregateError:
+
+
+
+  ΓùÅ Phase 5 ΓÇö Billing & Payments ΓÇ║ POST 
+/hospitals/:hId/bills/:billId/payments ΓåÆ partial 
+payment ΓåÆ PARTIALLY_PAID
+
+    AggregateError:
+
+
+
+  ΓùÅ Phase 5 ΓÇö Billing & Payments ΓÇ║ POST 
+/hospitals/:hId/bills/:billId/payments ΓåÆ 
+remaining ΓåÆ PAID, balanceDue=0
+
+    AggregateError:
+
+
+
+  ΓùÅ Phase 5 ΓÇö Billing & Payments ΓÇ║ POST 
+duplicate payment with same idempotencyKey ΓåÆ no 
+duplicate (200 or 409)
+
+    AggregateError:
+
+
+
+  ΓùÅ Phase 5 ΓÇö Billing & Payments ΓÇ║ GET 
+/hospitals/:hId/revenue-summary ΓåÆ 200 with 
+summary data
+
+    AggregateError:
+
+
+
+FAIL tests/e2e/phase1-auth.e2e.js
+  ΓùÅ Phase 1 ΓÇö Auth ΓÇ║ POST 
+/auth/register-hospital ΓåÆ 201 with hospitalId
+
+    AggregateError:
+
+
+
+  ΓùÅ Phase 1 ΓÇö Auth ΓÇ║ POST /auth/login ΓåÆ 
+200 with tokens
+
+    AggregateError:
+
+
+
+  ΓùÅ Phase 1 ΓÇö Auth ΓÇ║ POST /auth/login with 
+wrong password ΓåÆ 401
+
+    AggregateError:
+
+
+
+  ΓùÅ Phase 1 ΓÇö Auth ΓÇ║ POST /auth/refresh ΓåÆ 
+200 with new accessToken
+
+    AggregateError:
+
+
+
+  ΓùÅ Phase 1 ΓÇö Auth ΓÇ║ GET /protected route 
+without token ΓåÆ 401
+
+    AggregateError:
+
+
+
+  ΓùÅ Phase 1 ΓÇö Auth ΓÇ║ POST /auth/logout ΓåÆ 
+200
+
+    AggregateError:
+
+
+
+FAIL tests/e2e/phase6-inventory.e2e.js
+  ΓùÅ Phase 6 ΓÇö Inventory ΓÇ║ POST 
+/hospitals/:hId/inventory ΓåÆ 201 creates 
+inventory item
+
+    AggregateError:
+
+
+
+  ΓùÅ Phase 6 ΓÇö Inventory ΓÇ║ GET 
+/hospitals/:hId/inventory ΓåÆ 200 returns list 
+with created item
+
+    AggregateError:
+
+
+
+  ΓùÅ Phase 6 ΓÇö Inventory ΓÇ║ GET 
+/hospitals/:hId/inventory/:itemId ΓåÆ 200 correct 
+details
+
+    AggregateError:
+
+
+
+  ΓùÅ Phase 6 ΓÇö Inventory ΓÇ║ POST 
+/hospitals/:hId/inventory/:itemId/stock-in ΓåÆ 201 
+increases stock
+
+    AggregateError:
+
+
+
+  ΓùÅ Phase 6 ΓÇö Inventory ΓÇ║ GET 
+/hospitals/:hId/inventory/:itemId ΓåÆ 200 
+stock=500 after stock-in
+
+    AggregateError:
+
+
+
+  ΓùÅ Phase 6 ΓÇö Inventory ΓÇ║ GET 
+/hospitals/:hId/inventory?lowStock=true ΓåÆ 200 
+item is NOT low (500 > 200 threshold)
+
+    AggregateError:
+
+
+
+  ΓùÅ Phase 6 ΓÇö Inventory ΓÇ║ Verify low-stock 
+alert: stock-in small batch below reorder ΓåÆ item 
+appears in low-stock
+
+    AggregateError:
+
+
+
+  ΓùÅ Phase 6 ΓÇö Inventory ΓÇ║ PUT 
+/hospitals/:hId/inventory/:itemId ΓåÆ 200 updates 
+item details
+
+    AggregateError:
+
+
+
+FAIL tests/e2e/phase2-hospital.e2e.js
+  ΓùÅ Phase 2 ΓÇö Hospital & Branches ΓÇ║ GET 
+/hospitals/:hospitalId ΓåÆ 200 with correct 
+hospital shape
+
+    AggregateError:
+
+
+
+  ΓùÅ Phase 2 ΓÇö Hospital & Branches ΓÇ║ PUT 
+/hospitals/:hospitalId ΓåÆ 200 updates hospital 
+settings
+
+    AggregateError:
+
+
+
+  ΓùÅ Phase 2 ΓÇö Hospital & Branches ΓÇ║ POST 
+/hospitals/:hospitalId/branches ΓåÆ 201 creates 
+branch
+
+    AggregateError:
+
+
+
+  ΓùÅ Phase 2 ΓÇö Hospital & Branches ΓÇ║ GET 
+/hospitals/:hospitalId/branches ΓåÆ 200 with array 
+of branches
+
+    AggregateError:
+
+
+
+  ΓùÅ Phase 2 ΓÇö Hospital & Branches ΓÇ║ PUT 
+/hospitals/:hospitalId/branches/:branchId ΓåÆ 200 
+updates branch
+
+    AggregateError:
+
+
+
+FAIL tests/e2e/phase3-patient.e2e.js
+  ΓùÅ Phase 3 ΓÇö Patient Management ΓÇ║ POST 
+/hospitals/:hId/branches/:bId/patients ΓåÆ 201 
+with UHID
+
+    AggregateError:
+
+
+
+  ΓùÅ Phase 3 ΓÇö Patient Management ΓÇ║ GET 
+/hospitals/:hId/branches/:bId/patients/:patientId 
+ΓåÆ 200 correct shape
+
+    AggregateError:
+
+
+
+  ΓùÅ Phase 3 ΓÇö Patient Management ΓÇ║ GET 
+/hospitals/:hId/patients/search?name=... ΓåÆ 200 
+returns patient in list
+
+    AggregateError:
+
+
+
+  ΓùÅ Phase 3 ΓÇö Patient Management ΓÇ║ GET 
+/hospitals/:hId/patients/search?mobile=... ΓåÆ 200 
+returns matching patient
+
+    AggregateError:
+
+
+
+  ΓùÅ Phase 3 ΓÇö Patient Management ΓÇ║ PUT 
+/hospitals/:hId/branches/:bId/patients/:patientId 
+ΓåÆ 200 updates patient
+
+    AggregateError:
+
+
+
+  ΓùÅ Phase 3 ΓÇö Patient Management ΓÇ║ GET 
+/hospitals/:hId/branches/:bId/patients ΓåÆ 200 
+returns list
+
+    AggregateError:
+
+
+
+Test Suites: 6 failed, 6 total
+Tests:       38 failed, 38 total
+Snapshots:   0 total
+Time:        2.03 s
+Ran all test suites matching /tests\\e2e/i.

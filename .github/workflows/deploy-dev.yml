@@ -1,0 +1,63 @@
+name: Deploy Dev
+
+on:
+  push:
+    branches: [develop]
+
+jobs:
+  deploy:
+    name: Test, Deploy & E2E (dev)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # ─── Unit Tests ──────────────────────────────────────────────────────────
+      - name: Run unit tests
+        run: npm run test:unit
+
+      # ─── Integration Tests (local DynamoDB mock — no AWS needed) ─────────────
+      - name: Run integration tests
+        run: npm run test:integration
+
+      # ─── Deploy to dev ───────────────────────────────────────────────────────
+      - name: Deploy to dev stage
+        id: deploy
+        run: |
+          npx serverless deploy --stage dev --verbose 2>&1 | tee deploy.log
+          # Extract the API endpoint emitted by Serverless Framework
+          ENDPOINT=$(grep -oP 'https://[a-z0-9]+\.execute-api\.[^/]+\.amazonaws\.com/dev' deploy.log | head -1)
+          echo "endpoint=${ENDPOINT}" >> "$GITHUB_OUTPUT"
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ap-south-1
+
+      # ─── E2E Tests against freshly deployed dev API ──────────────────────────
+      - name: Run E2E tests
+        run: npm run test:e2e
+        env:
+          API_BASE_URL: ${{ steps.deploy.outputs.endpoint }}
+        # Allow E2E to fail non-fatally on first deploy (cold-start warm-up)
+        continue-on-error: false
+
+      # ─── Upload test artifacts on failure ────────────────────────────────────
+      - name: Upload test logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-logs-dev
+          path: |
+            test_results.log
+            deploy.log
+          retention-days: 7

@@ -1,0 +1,191 @@
+service: ayurmedi-infra
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ap-south-1
+  stage: ${opt:stage, 'dev'}
+  environment:
+    STAGE: ${self:provider.stage}
+    S3_BUCKET: ${self:service}-${self:provider.stage}-documents-${self:provider.region}
+
+resources:
+  Resources:
+    AyurMediTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: AyurMediTable-${self:provider.stage}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: PK
+            AttributeType: S
+          - AttributeName: SK
+            AttributeType: S
+          - AttributeName: GSI1-PK
+            AttributeType: S
+          - AttributeName: GSI1-SK
+            AttributeType: S
+          - AttributeName: hospitalId
+            AttributeType: S
+          - AttributeName: createdAt
+            AttributeType: S
+          - AttributeName: mobileNumber
+            AttributeType: S
+          - AttributeName: patientId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: PK
+            KeyType: HASH
+          - AttributeName: SK
+            KeyType: RANGE
+        GlobalSecondaryIndexes:
+          - IndexName: GSI1
+            KeySchema:
+              - AttributeName: GSI1-PK
+                KeyType: HASH
+              - AttributeName: GSI1-SK
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+          - IndexName: GSI2
+            KeySchema:
+              - AttributeName: hospitalId
+                KeyType: HASH
+              - AttributeName: createdAt
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+          - IndexName: GSI3
+            KeySchema:
+              - AttributeName: mobileNumber
+                KeyType: HASH
+              - AttributeName: patientId
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+
+    AttachmentsBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:provider.environment.S3_BUCKET}
+        VersioningConfiguration:
+          Status: Enabled
+        BucketEncryption:
+          ServerSideEncryptionConfiguration:
+            - ServerSideEncryptionByDefault:
+                SSEAlgorithm: AES256
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: true
+          IgnorePublicAcls: true
+          BlockPublicPolicy: true
+          RestrictPublicBuckets: true
+        LifecycleConfiguration:
+          Rules:
+            - Id: MoveToIA
+              Status: Enabled
+              Transitions:
+                - TransitionInDays: 90
+                  StorageClass: STANDARD_IA
+
+    AttachmentsBucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket: !Ref AttachmentsBucket
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Sid: DenyPublicGetObject
+              Effect: Deny
+              Principal: "*"
+              Action: s3:GetObject
+              Resource: !Sub "arn:aws:s3:::${self:provider.environment.S3_BUCKET}/*"
+              Condition:
+                StringNotEquals:
+                  s3:authType: REST-QUERY-STRING
+
+    CognitoUserPool:
+      Type: AWS::Cognito::UserPool
+      Properties:
+        UserPoolName: ayurmedi-users-${self:provider.stage}
+        AutoVerifiedAttributes:
+          - email
+        MfaConfiguration: "OFF"
+        Policies:
+          PasswordPolicy:
+            MinimumLength: 8
+            RequireUppercase: true
+            RequireLowercase: true
+            RequireNumbers: true
+            RequireSymbols: false
+        Schema:
+          - Name: email
+            Required: true
+            Mutable: true
+            AttributeDataType: String
+          - Name: hospitalId
+            Required: false
+            Mutable: true
+            AttributeDataType: String
+          - Name: role
+            Required: false
+            Mutable: true
+            AttributeDataType: String
+          - Name: branchId
+            Required: false
+            Mutable: true
+            AttributeDataType: String
+
+    CognitoUserPoolClient:
+      Type: AWS::Cognito::UserPoolClient
+      Properties:
+        ClientName: ayurmedi-app-${self:provider.stage}
+        UserPoolId: !Ref CognitoUserPool
+        GenerateSecret: false
+        ExplicitAuthFlows:
+          - ALLOW_USER_SRP_AUTH
+          - ALLOW_REFRESH_TOKEN_AUTH
+          - ALLOW_CUSTOM_AUTH
+        PreventUserExistenceErrors: ENABLED
+
+    ReportQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ayurmedi-reports-${self:provider.stage}
+        VisibilityTimeout: 300
+
+  Outputs:
+    CognitoUserPoolId:
+      Description: Cognito User Pool ID
+      Value: !Ref CognitoUserPool
+      Export:
+        Name: ${self:service}-${self:provider.stage}-CognitoUserPoolId
+
+    CognitoClientId:
+      Description: Cognito App Client ID
+      Value: !Ref CognitoUserPoolClient
+      Export:
+        Name: ${self:service}-${self:provider.stage}-CognitoClientId
+
+    S3BucketName:
+      Description: S3 Documents Bucket Name
+      Value: !Ref AttachmentsBucket
+      Export:
+        Name: ${self:service}-${self:provider.stage}-S3BucketName
+
+    DynamoDBTableName:
+      Description: DynamoDB Table Name
+      Value: !Ref AyurMediTable
+      Export:
+        Name: ${self:service}-${self:provider.stage}-DynamoDBTableName
+
+    SQSQueueUrl:
+      Description: Report Queue URL
+      Value: !Ref ReportQueue
+      Export:
+        Name: ${self:service}-${self:provider.stage}-SQSQueueUrl
+
+    SQSQueueArn:
+      Description: Report Queue ARN
+      Value: !GetAtt ReportQueue.Arn
+      Export:
+        Name: ${self:service}-${self:provider.stage}-SQSQueueArn

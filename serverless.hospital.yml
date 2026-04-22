@@ -1,0 +1,225 @@
+# Hospital, Branches, Doctors, Forms Stack
+service: ayurmedi-hospital
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ap-south-1
+  stage: ${opt:stage, 'dev'}
+  tracing:
+    lambda: true
+    apiGateway: true
+  timeout: 29
+  memorySize: 512
+  environment:
+    STAGE: ${self:provider.stage}
+    TABLE_NAME: ${ssm:/ayurmedi/${self:provider.stage}/TABLE_NAME, 'AyurMediTable-dev'}
+    COGNITO_USER_POOL_ID: ${ssm:/ayurmedi/${self:provider.stage}/COGNITO_USER_POOL_ID, 'ap-south-1_mockPool1'}
+    COGNITO_APP_CLIENT_ID: ${ssm:/ayurmedi/${self:provider.stage}/COGNITO_APP_CLIENT_ID, 'mockClient1234'}
+    S3_BUCKET: ${ssm:/ayurmedi/${self:provider.stage}/S3_BUCKET, 'mock-bucket'}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:GetItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            - dynamodb:Query
+            - dynamodb:Scan
+          Resource:
+            - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TABLE_NAME}
+            - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TABLE_NAME}/index/*
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource:
+            - arn:aws:logs:${self:provider.region}:*:log-group:/aws/lambda/*:*:*
+        - Effect: Allow
+          Action:
+            - xray:PutTraceSegments
+            - xray:PutTelemetryRecords
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - ssm:GetParameter
+          Resource:
+            - arn:aws:ssm:${self:provider.region}:*:parameter/ayurmedi/${self:provider.stage}/*
+        - Effect: Allow
+          Action:
+            - cognito-idp:AdminCreateUser
+            - cognito-idp:AdminSetUserPassword
+            - cognito-idp:AdminAddUserToGroup
+          Resource: "*"
+
+functions:
+  customAuthorizer:
+    handler: src/common/auth.authorizer
+
+  getHospital:
+    handler: src/modules/hospitals/handler.getHospital
+    events:
+      - http:
+          path: /hospitals/{hospitalId}
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            type: token
+
+  updateHospital:
+    handler: src/modules/hospitals/handler.updateHospital
+    events:
+      - http:
+          path: /hospitals/{hospitalId}
+          method: put
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            type: token
+
+  createBranch:
+    handler: src/modules/branches/handler.createBranch
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/branches
+          method: post
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            type: token
+
+  listBranches:
+    handler: src/modules/branches/handler.listBranches
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/branches
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            type: token
+
+  updateBranch:
+    handler: src/modules/branches/handler.updateBranch
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/branches/{branchId}
+          method: put
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            type: token
+
+  createDoctor:
+    handler: src/modules/doctors/handler.createDoctor
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/doctors
+          method: post
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            type: token
+
+  listDoctors:
+    handler: src/modules/doctors/handler.listDoctors
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/doctors
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            type: token
+
+  updateDoctor:
+    handler: src/modules/doctors/handler.updateDoctor
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/doctors/{doctorId}
+          method: put
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            type: token
+
+  deleteDoctor:
+    handler: src/modules/doctors/handler.deleteDoctor
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/doctors/{doctorId}
+          method: delete
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            type: token
+
+  createForm:
+    handler: src/modules/forms/handler.createForm
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/forms
+          method: post
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            type: token
+
+  listForms:
+    handler: src/modules/forms/handler.listForms
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/forms
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            type: token
+
+  getForm:
+    handler: src/modules/forms/handler.getForm
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/forms/{formId}
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            type: token
+
+  updateForm:
+    handler: src/modules/forms/handler.updateForm
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/forms/{formId}
+          method: put
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            type: token
+
+  deleteForm:
+    handler: src/modules/forms/handler.deleteForm
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/forms/{formId}
+          method: delete
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            type: token
+
+  publishForm:
+    handler: src/modules/forms/handler.publishForm
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/forms/{formId}/publish
+          method: post
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            type: token

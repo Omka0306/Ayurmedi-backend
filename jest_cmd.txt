@@ -1,0 +1,330 @@
+
+> ayurmedi-backend@1.0.0 test:unit
+> node --experimental-vm-modules node_modules/jest/bin/jest.js tests/unit
+
+(node:16348) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS tests/unit/common/db.test.js
+(node:1168) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+FAIL tests/unit/dashboard.test.js
+  ● dashboard module › Admin dashboard: today's data combines Redis queue + DynamoDB revenue + pre-computed analytics
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 2
+    Received: 1
+
+    [0m [90m 89 |[39m     expect(data[33m.[39malerts[33m.[39mpendingBillsCount)[33m.[39mtoBe([35m1[39m)[33m;[39m
+     [90m 90 |[39m
+    [31m[1m>[22m[39m[90m 91 |[39m     expect(data[33m.[39mdoctorDistribution[33m.[39mlength)[33m.[39mtoBe([35m2[39m)[33m;[39m
+     [90m    |[39m                                            [31m[1m^[22m[39m
+     [90m 92 |[39m     expect(data[33m.[39manalytics[33m.[39mtopComplaints[33m.[39mlength)[33m.[39mtoBe([35m1[39m)[33m;[39m
+     [90m 93 |[39m   })[33m;[39m
+     [90m 94 |[39m[0m
+
+      at Object.<anonymous> (tests/unit/dashboard.test.js:91:44)
+
+  ● dashboard module › Doctor dashboard: scoped to doctorId from JWT, does not return other doctors' data
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 2
+    Received: 3
+
+    [0m [90m 144 |[39m     expect(data[33m.[39mdoctorId)[33m.[39mtoBe([32m"223e4567-e89b-12d3-a456-426614174001"[39m)[33m;[39m
+     [90m 145 |[39m     [90m// Should filter out doc-2[39m
+    [31m[1m>[22m[39m[90m 146 |[39m     expect(data[33m.[39mtoday[33m.[39mtotalPatients)[33m.[39mtoBe([35m2[39m)[33m;[39m
+     [90m     |[39m                                      [31m[1m^[22m[39m
+     [90m 147 |[39m     expect(data[33m.[39mtoday[33m.[39mwaitingPatients)[33m.[39mtoBe([35m1[39m)[33m;[39m
+     [90m 148 |[39m     expect(data[33m.[39mconsultationsList[33m.[39mlength)[33m.[39mtoBe([35m2[39m)[33m;[39m
+     [90m 149 |[39m   })[33m;[39m[0m
+
+      at Object.<anonymous> (tests/unit/dashboard.test.js:146:38)
+
+(node:1272) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+FAIL tests/unit/users.test.js
+  ● users module › list users: returns paginated list scoped to hospitalId
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "HOSP#123e4567-e89b-12d3-a456-4266141740001"
+    Received: undefined
+
+    [0m [90m 53 |[39m     expect(db[33m.[39mquery)[33m.[39mtoHaveBeenCalledTimes([35m1[39m)[33m;[39m
+     [90m 54 |[39m     [36mconst[39m queryArg [33m=[39m db[33m.[39mquery[33m.[39mmock[33m.[39mcalls[[35m0[39m][[35m0[39m][33m;[39m
+    [31m[1m>[22m[39m[90m 55 |[39m     expect(queryArg[33m.[39m[33mExpressionAttributeValues[39m[[32m":123e4567-e89b-12d3-a456-426614174000Id"[39m])[33m.[39mtoBe([32m"HOSP#123e4567-e89b-12d3-a456-4266141740001"[39m)[33m;[39m
+     [90m    |[39m                                                                                           [31m[1m^[22m[39m
+     [90m 56 |[39m   })[33m;[39m
+     [90m 57 |[39m
+     [90m 58 |[39m   it([32m"create 423e4567-e89b-12d3-a456-426614174003: valid input creates 423e4567-e89b-12d3-a456-426614174003"[39m[33m,[39m [36masync[39m () [33m=>[39m {[0m
+
+      at Object.<anonymous> (tests/unit/users.test.js:55:91)
+
+  ● users module › update 423e4567-e89b-12d3-a456-426614174003: updates fields, audit log is called
+
+    expect(jest.fn()).toHaveBeenCalledTimes(expected)
+
+    Expected number of calls: 1
+    Received number of calls: 2
+
+    [0m [90m 111 |[39m     expect(res[33m.[39mstatusCode)[33m.[39mtoBe([35m200[39m)[33m;[39m
+     [90m 112 |[39m     expect(db[33m.[39mupdate)[33m.[39mtoHaveBeenCalledTimes([35m1[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 113 |[39m     expect(db[33m.[39mput)[33m.[39mtoHaveBeenCalledTimes([35m1[39m)[33m;[39m 
+     [90m     |[39m                    [31m[1m^[22m[39m
+     [90m 114 |[39m   })[33m;[39m
+     [90m 115 |[39m
+     [90m 116 |[39m   it([32m"delete 423e4567-e89b-12d3-a456-426614174003: soft deletes (status=INACTIVE), does not hard delete"[39m[33m,[39m [36masync[39m () [33m=>[39m {[0m
+
+      at Object.<anonymous> (tests/unit/users.test.js:113:20)
+
+PASS tests/unit/common/auth.test.js
+  ● Console
+
+    console.error
+      Authorizer Error: No token provided
+
+    [0m [90m 42 |[39m     })[33m;[39m
+     [90m 43 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 44 |[39m     console[33m.[39merror([32m"Authorizer Error:"[39m[33m,[39m error[33m.[39mmessage)[33m;[39m
+     [90m    |[39m             [31m[1m^[22m[39m
+     [90m 45 |[39m     [36mthrow[39m [36mnew[39m [33mError[39m([32m"Unauthorized"[39m)[33m;[39m
+     [90m 46 |[39m   }
+     [90m 47 |[39m }[33m;[39m[0m
+
+      at authorizer (src/common/auth.js:44:13)
+      at Object.<anonymous> (tests/unit/common/auth.test.js:41:20)
+
+    console.error
+      Authorizer Error: invalid token
+
+    [0m [90m 42 |[39m     })[33m;[39m
+     [90m 43 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 44 |[39m     console[33m.[39merror([32m"Authorizer Error:"[39m[33m,[39m error[33m.[39mmessage)[33m;[39m
+     [90m    |[39m             [31m[1m^[22m[39m
+     [90m 45 |[39m     [36mthrow[39m [36mnew[39m [33mError[39m([32m"Unauthorized"[39m)[33m;[39m
+     [90m 46 |[39m   }
+     [90m 47 |[39m }[33m;[39m[0m
+
+      at authorizer (src/common/auth.js:44:13)
+      at Object.<anonymous> (tests/unit/common/auth.test.js:47:7)
+
+PASS tests/unit/forms.test.js
+PASS tests/unit/inventory.test.js
+  ● Console
+
+    console.log
+      [InventoryAlerts] Processed 4 items, generated 4 operations
+
+      at handler (src/modules/inventory/scheduledAlerts.js:103:13)
+
+PASS tests/unit/hospitals.test.js
+PASS tests/unit/common/auditLogger.test.js
+PASS tests/unit/common/validators.test.js
+PASS tests/unit/auth.test.js
+PASS tests/unit/common/errors.test.js
+PASS tests/unit/common/response.test.js
+FAIL tests/unit/tokens.test.js
+  ● Test suite failed to run
+
+    SyntaxError: Unexpected token '-'
+
+      at Runtime.loadEsmModule (node_modules/jest-runtime/build/index.js:516:20)
+
+FAIL tests/unit/prescriptions.test.js
+  ● Test suite failed to run
+
+    SyntaxError: Unexpected token '-'
+
+      at Runtime.loadEsmModule (node_modules/jest-runtime/build/index.js:516:20)
+
+FAIL tests/unit/reports.test.js
+  ● Test suite failed to run
+
+    SyntaxError: Unexpected token '-'
+
+      at Runtime.loadEsmModule (node_modules/jest-runtime/build/index.js:516:20)
+
+FAIL tests/unit/panchakarma.test.js
+  ● Test suite failed to run
+
+    SyntaxError: Unexpected token '-'
+
+      at Runtime.loadEsmModule (node_modules/jest-runtime/build/index.js:516:20)
+
+FAIL tests/unit/patients.test.js
+  ● Test suite failed to run
+
+    SyntaxError: Unexpected token '-'
+
+      at Runtime.loadEsmModule (node_modules/jest-runtime/build/index.js:516:20)
+
+FAIL tests/unit/doctors.test.js
+  ● Test suite failed to run
+
+    SyntaxError: Unexpected token '-'
+
+      at Runtime.loadEsmModule (node_modules/jest-runtime/build/index.js:516:20)
+
+FAIL tests/unit/consultations.test.js
+  ● Test suite failed to run
+
+    SyntaxError: Unexpected number
+
+      at Runtime.loadEsmModule (node_modules/jest-runtime/build/index.js:516:20)
+
+FAIL tests/unit/branches.test.js
+  ● Test suite failed to run
+
+    SyntaxError: Unexpected token '-'
+
+      at Runtime.loadEsmModule (node_modules/jest-runtime/build/index.js:516:20)
+
+FAIL tests/unit/billing.test.js
+  ● Test suite failed to run
+
+    SyntaxError: Unexpected token '-'
+
+      at Runtime.loadEsmModule (node_modules/jest-runtime/build/index.js:516:20)
+
+Summary of all failing tests
+FAIL tests/unit/dashboard.test.js
+  ● dashboard module › Admin dashboard: today's data combines Redis queue + DynamoDB revenue + pre-computed analytics
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 2
+    Received: 1
+
+    [0m [90m 89 |[39m     expect(data[33m.[39malerts[33m.[39mpendingBillsCount)[33m.[39mtoBe([35m1[39m)[33m;[39m
+     [90m 90 |[39m
+    [31m[1m>[22m[39m[90m 91 |[39m     expect(data[33m.[39mdoctorDistribution[33m.[39mlength)[33m.[39mtoBe([35m2[39m)[33m;[39m
+     [90m    |[39m                                            [31m[1m^[22m[39m
+     [90m 92 |[39m     expect(data[33m.[39manalytics[33m.[39mtopComplaints[33m.[39mlength)[33m.[39mtoBe([35m1[39m)[33m;[39m
+     [90m 93 |[39m   })[33m;[39m
+     [90m 94 |[39m[0m
+
+      at Object.<anonymous> (tests/unit/dashboard.test.js:91:44)
+
+  ● dashboard module › Doctor dashboard: scoped to doctorId from JWT, does not return other doctors' data
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 2
+    Received: 3
+
+    [0m [90m 144 |[39m     expect(data[33m.[39mdoctorId)[33m.[39mtoBe([32m"223e4567-e89b-12d3-a456-426614174001"[39m)[33m;[39m
+     [90m 145 |[39m     [90m// Should filter out doc-2[39m
+    [31m[1m>[22m[39m[90m 146 |[39m     expect(data[33m.[39mtoday[33m.[39mtotalPatients)[33m.[39mtoBe([35m2[39m)[33m;[39m
+     [90m     |[39m                                      [31m[1m^[22m[39m
+     [90m 147 |[39m     expect(data[33m.[39mtoday[33m.[39mwaitingPatients)[33m.[39mtoBe([35m1[39m)[33m;[39m
+     [90m 148 |[39m     expect(data[33m.[39mconsultationsList[33m.[39mlength)[33m.[39mtoBe([35m2[39m)[33m;[39m
+     [90m 149 |[39m   })[33m;[39m[0m
+
+      at Object.<anonymous> (tests/unit/dashboard.test.js:146:38)
+
+FAIL tests/unit/users.test.js
+  ● users module › list users: returns paginated list scoped to hospitalId
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "HOSP#123e4567-e89b-12d3-a456-4266141740001"
+    Received: undefined
+
+    [0m [90m 53 |[39m     expect(db[33m.[39mquery)[33m.[39mtoHaveBeenCalledTimes([35m1[39m)[33m;[39m
+     [90m 54 |[39m     [36mconst[39m queryArg [33m=[39m db[33m.[39mquery[33m.[39mmock[33m.[39mcalls[[35m0[39m][[35m0[39m][33m;[39m
+    [31m[1m>[22m[39m[90m 55 |[39m     expect(queryArg[33m.[39m[33mExpressionAttributeValues[39m[[32m":123e4567-e89b-12d3-a456-426614174000Id"[39m])[33m.[39mtoBe([32m"HOSP#123e4567-e89b-12d3-a456-4266141740001"[39m)[33m;[39m
+     [90m    |[39m                                                                                           [31m[1m^[22m[39m
+     [90m 56 |[39m   })[33m;[39m
+     [90m 57 |[39m
+     [90m 58 |[39m   it([32m"create 423e4567-e89b-12d3-a456-426614174003: valid input creates 423e4567-e89b-12d3-a456-426614174003"[39m[33m,[39m [36masync[39m () [33m=>[39m {[0m
+
+      at Object.<anonymous> (tests/unit/users.test.js:55:91)
+
+  ● users module › update 423e4567-e89b-12d3-a456-426614174003: updates fields, audit log is called
+
+    expect(jest.fn()).toHaveBeenCalledTimes(expected)
+
+    Expected number of calls: 1
+    Received number of calls: 2
+
+    [0m [90m 111 |[39m     expect(res[33m.[39mstatusCode)[33m.[39mtoBe([35m200[39m)[33m;[39m
+     [90m 112 |[39m     expect(db[33m.[39mupdate)[33m.[39mtoHaveBeenCalledTimes([35m1[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 113 |[39m     expect(db[33m.[39mput)[33m.[39mtoHaveBeenCalledTimes([35m1[39m)[33m;[39m 
+     [90m     |[39m                    [31m[1m^[22m[39m
+     [90m 114 |[39m   })[33m;[39m
+     [90m 115 |[39m
+     [90m 116 |[39m   it([32m"delete 423e4567-e89b-12d3-a456-426614174003: soft deletes (status=INACTIVE), does not hard delete"[39m[33m,[39m [36masync[39m () [33m=>[39m {[0m
+
+      at Object.<anonymous> (tests/unit/users.test.js:113:20)
+
+FAIL tests/unit/tokens.test.js
+  ● Test suite failed to run
+
+    SyntaxError: Unexpected token '-'
+
+      at Runtime.loadEsmModule (node_modules/jest-runtime/build/index.js:516:20)
+
+FAIL tests/unit/prescriptions.test.js
+  ● Test suite failed to run
+
+    SyntaxError: Unexpected token '-'
+
+      at Runtime.loadEsmModule (node_modules/jest-runtime/build/index.js:516:20)
+
+FAIL tests/unit/reports.test.js
+  ● Test suite failed to run
+
+    SyntaxError: Unexpected token '-'
+
+      at Runtime.loadEsmModule (node_modules/jest-runtime/build/index.js:516:20)
+
+FAIL tests/unit/panchakarma.test.js
+  ● Test suite failed to run
+
+    SyntaxError: Unexpected token '-'
+
+      at Runtime.loadEsmModule (node_modules/jest-runtime/build/index.js:516:20)
+
+FAIL tests/unit/patients.test.js
+  ● Test suite failed to run
+
+    SyntaxError: Unexpected token '-'
+
+      at Runtime.loadEsmModule (node_modules/jest-runtime/build/index.js:516:20)
+
+FAIL tests/unit/doctors.test.js
+  ● Test suite failed to run
+
+    SyntaxError: Unexpected token '-'
+
+      at Runtime.loadEsmModule (node_modules/jest-runtime/build/index.js:516:20)
+
+FAIL tests/unit/consultations.test.js
+  ● Test suite failed to run
+
+    SyntaxError: Unexpected number
+
+      at Runtime.loadEsmModule (node_modules/jest-runtime/build/index.js:516:20)
+
+FAIL tests/unit/branches.test.js
+  ● Test suite failed to run
+
+    SyntaxError: Unexpected token '-'
+
+      at Runtime.loadEsmModule (node_modules/jest-runtime/build/index.js:516:20)
+
+FAIL tests/unit/billing.test.js
+  ● Test suite failed to run
+
+    SyntaxError: Unexpected token '-'
+
+      at Runtime.loadEsmModule (node_modules/jest-runtime/build/index.js:516:20)
+
+
+Test Suites: 11 failed, 10 passed, 21 total
+Tests:       4 failed, 69 passed, 73 total
+Snapshots:   0 total
+Time:        7.663 s
+Ran all test suites matching /tests\\unit/i.

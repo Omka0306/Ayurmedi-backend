@@ -1,1014 +1,1276 @@
 service: ayurmedi-backend
 
-frameworkVersion: "4"
+plugins:
+  - serverless-offline
+  - serverless-prune-plugin
+  - serverless-export-outputs
 
-package:
-  individually: false
-  patterns:
-    # Dev tools - not needed at runtime
-    - "!node_modules/aws-sdk/**"
-    - "!node_modules/effect/**"
-    - "!node_modules/@effect/**"
-    - "!node_modules/java-invoke-local/**"
-    - "!node_modules/@esbuild/**"
-    - "!node_modules/esbuild/**"
-    - "!node_modules/@faker-js/**"
-    - "!node_modules/postman-runtime/**"
-    - "!node_modules/postman-sandbox/**"
-    - "!node_modules/serverless/**"
-    - "!node_modules/@serverless/**"
-    - "!node_modules/web-streams-polyfill/**"
-    - "!node_modules/rxjs/**"
-    - "!node_modules/luxon/**"
-    - "!node_modules/json-refs/**"
-    - "!node_modules/handlebars/**"
-    - "!node_modules/@types/**"
-    - "!node_modules/es-abstract/**"
-    - "!node_modules/dayjs/locale/**"
-    - "!node_modules/dayjs/plugin/**"
-    # Temp/test files
-    - "!node_modules/.bin/**"
-    - "!**/*.test.js"
-    - "!**/*.spec.js"
-    - "!**/*.md"
-    - "!.git/**"
-    - "!test/**"
-    - "!tests/**"
-    - "!coverage/**"
-    - "!.serverless/**"
-    - "!deploy_log.txt"
-    - "!cf_events.json"
-    - "!all_failures.json"
-    - "!fetch_*.js"
-    - "!read_error.js"
-    - "!error.txt"
-    - "!events.json"
-    - "!client_error.txt"
 
 provider:
   name: aws
   runtime: nodejs20.x
-  region: ${env:AWS_REGION, 'ap-south-1'}
-  stage: ${env:STAGE, 'dev'}
-  memorySize: 256
-  timeout: 10
-
-  httpApi:
-    cors:
-      allowedOrigins:
-        - http://localhost:3000
-        - https://localhost:3000
-        - http://localhost:3001
-        - https://ayurmedi.com
-        - https://www.ayurmedi.com
-      allowedHeaders:
-        - Content-Type
-        - Authorization
-        - x-hospital-id
-      allowedMethods:
-        - GET
-        - POST
-        - PUT
-        - DELETE
-        - OPTIONS
-      allowCredentials: true
-
+  region: ap-south-1
+  stage: ${opt:stage, 'dev'}
+  tracing:
+    lambda: true
+    apiGateway: true
+  timeout: 29
+  memorySize: 512
   environment:
     STAGE: ${self:provider.stage}
-    # Existing tables
-    HOSPITALS_TABLE: ${self:service}-hospitals-${self:provider.stage}
-    USERS_TABLE: ${self:service}-users-${self:provider.stage}
-    USER_POOL_ID: !Ref AyurmediUserPool
-    USER_POOL_CLIENT_ID: !Ref AyurmediUserPoolClient
-    # New tables
-    PATIENTS_TABLE: ${self:service}-patients-${self:provider.stage}
-    CONSULTATIONS_TABLE: ${self:service}-consultations-${self:provider.stage}
-    PRESCRIPTIONS_TABLE: ${self:service}-prescriptions-${self:provider.stage}
-    PANCHAKARMA_PLANS_TABLE: ${self:service}-pk-plans-${self:provider.stage}
-    PANCHAKARMA_SESSIONS_TABLE: ${self:service}-pk-sessions-${self:provider.stage}
-    TOKENS_TABLE: ${self:service}-tokens-${self:provider.stage}
-    BILLS_TABLE: ${self:service}-bills-${self:provider.stage}
-    INVENTORY_ITEMS_TABLE: ${self:service}-inventory-items-${self:provider.stage}
-    STOCK_MOVEMENTS_TABLE: ${self:service}-stock-movements-${self:provider.stage}
-    FORM_CONFIGS_TABLE: ${self:service}-form-configs-${self:provider.stage}
-    BRANCHES_TABLE: ${self:service}-branches-${self:provider.stage}
-    AUDIT_LOG_TABLE: ${self:service}-audit-${self:provider.stage}
-
+    TABLE_NAME: ${ssm:/ayurmedi/${self:provider.stage}/TABLE_NAME, 'AyurMediTable-dev'}
+    COGNITO_USER_POOL_ID: ${ssm:/ayurmedi/${self:provider.stage}/COGNITO_USER_POOL_ID, 'ap-south-1_mockPool1'}
+    COGNITO_APP_CLIENT_ID: ${ssm:/ayurmedi/${self:provider.stage}/COGNITO_APP_CLIENT_ID, 'mockClient1234'}
+    S3_BUCKET: ${ssm:/ayurmedi/${self:provider.stage}/S3_BUCKET, 'mock-bucket'}
+    REDIS_URL: ${ssm:/ayurmedi/${self:provider.stage}/REDIS_URL, 'localhost'}
   iam:
     role:
       statements:
+        # DynamoDB: full CRUD on the single-table — no wildcard table resource
         - Effect: Allow
           Action:
             - dynamodb:PutItem
             - dynamodb:GetItem
-            - dynamodb:Query
             - dynamodb:UpdateItem
             - dynamodb:DeleteItem
+            - dynamodb:Query
             - dynamodb:Scan
-            - dynamodb:BatchWriteItem
-            - dynamodb:BatchGetItem
           Resource:
-            # Existing tables
-            - !GetAtt HospitalsTable.Arn
-            - !GetAtt UsersTable.Arn
-            - !Sub "${UsersTable.Arn}/index/*"
-            - !Sub "${HospitalsTable.Arn}/index/*"
-            # New tables
-            - !GetAtt PatientsTable.Arn
-            - !Sub "${PatientsTable.Arn}/index/*"
-            - !GetAtt ConsultationsTable.Arn
-            - !Sub "${ConsultationsTable.Arn}/index/*"
-            - !GetAtt PrescriptionsTable.Arn
-            - !Sub "${PrescriptionsTable.Arn}/index/*"
-            - !GetAtt PanchakarmaPlansTable.Arn
-            - !Sub "${PanchakarmaPlansTable.Arn}/index/*"
-            - !GetAtt PanchakarmaSessionsTable.Arn
-            - !Sub "${PanchakarmaSessionsTable.Arn}/index/*"
-            - !GetAtt TokensTable.Arn
-            - !Sub "${TokensTable.Arn}/index/*"
-            - !GetAtt BillsTable.Arn
-            - !Sub "${BillsTable.Arn}/index/*"
-            - !GetAtt InventoryItemsTable.Arn
-            - !Sub "${InventoryItemsTable.Arn}/index/*"
-            - !GetAtt StockMovementsTable.Arn
-            - !Sub "${StockMovementsTable.Arn}/index/*"
-            - !GetAtt FormConfigsTable.Arn
-            - !GetAtt BranchesTable.Arn
-            - !Sub "${BranchesTable.Arn}/index/*"
-            - !GetAtt AuditLogTable.Arn
-            - !Sub "${AuditLogTable.Arn}/index/*"
+            - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TABLE_NAME}
+            - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TABLE_NAME}/index/*
+        # S3: only PDF/attachment paths — no ListBucket on all objects
         - Effect: Allow
           Action:
-            - cognito-idp:AdminCreateUser
-            - cognito-idp:AdminSetUserPassword
-            - cognito-idp:AdminInitiateAuth
-            - cognito-idp:AdminGetUser
-            - cognito-idp:ForgotPassword
-            - cognito-idp:ConfirmForgotPassword
-            - cognito-idp:AdminUpdateUserAttributes
+            - s3:PutObject
+            - s3:GetObject
+            - s3:DeleteObject
+          Resource:
+            - arn:aws:s3:::${self:provider.environment.S3_BUCKET}/hospitals/*
+        # SQS: send to report queue only
+        - Effect: Allow
+          Action:
+            - sqs:SendMessage
+          Resource:
+            - Fn::GetAtt: [ReportQueue, Arn]
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource:
+            - arn:aws:logs:${self:provider.region}:*:log-group:/aws/lambda/*:*:*
+        - Effect: Allow
+          Action:
+            - xray:PutTraceSegments
+            - xray:PutTelemetryRecords
           Resource: "*"
 
 functions:
-  # ─── Auth ──────────────────────────────────────────────
-  authLogin:
-    handler: src/handlers/auth.login
+  customAuthorizer:
+    handler: src/common/auth.authorizer
+
+  registerHospital:
+    handler: src/modules/auth/handler.registerHospital
     events:
-      - httpApi:
-          method: POST
+      - http:
+          path: /auth/register-hospital
+          method: post
+          cors: true
+
+  login:
+    handler: src/modules/auth/handler.login
+    events:
+      - http:
           path: /auth/login
+          method: post
+          cors: true
 
-  authLogout:
-    handler: src/handlers/auth.logout
+  refresh:
+    handler: src/modules/auth/handler.refresh
     events:
-      - httpApi:
-          method: POST
+      - http:
+          path: /auth/refresh
+          method: post
+          cors: true
+
+  logout:
+    handler: src/modules/auth/handler.logout
+    events:
+      - http:
           path: /auth/logout
+          method: post
+          cors: true
 
-  authForgotPassword:
-    handler: src/handlers/auth.forgotPassword
+  forgotPassword:
+    handler: src/modules/auth/handler.forgotPassword
     events:
-      - httpApi:
-          method: POST
+      - http:
           path: /auth/forgot-password
+          method: post
+          cors: true
 
-  authResetPassword:
-    handler: src/handlers/auth.resetPassword
+  resetPassword:
+    handler: src/modules/auth/handler.resetPassword
     events:
-      - httpApi:
-          method: POST
+      - http:
           path: /auth/reset-password
+          method: post
+          cors: true
 
-  # ─── Hospital ──────────────────────────────────────────
-  hospitalRegister:
-    handler: src/handlers/hospital.register
+  changePassword:
+    handler: src/modules/auth/handler.changePassword
     events:
-      - httpApi:
-          method: POST
-          path: /hospitals/register
+      - http:
+          path: /auth/change-password
+          method: post
+          cors: true
 
-  hospitalGet:
-    handler: src/handlers/hospital.getHospital
+  listUsers:
+    handler: src/modules/users/handler.listUsers
     events:
-      - httpApi:
-          method: GET
-          path: /hospitals/{id}
-
-  hospitalList:
-    handler: src/handlers/hospital.listHospitals
-    events:
-      - httpApi:
-          method: GET
-          path: /hospitals
-
-  # ─── Branches ──────────────────────────────────────────
-  branchCreate:
-    handler: src/handlers/branch.create
-    events:
-      - httpApi:
-          method: POST
-          path: /hospitals/{hospitalId}/branches
-
-  branchList:
-    handler: src/handlers/branch.list
-    events:
-      - httpApi:
-          method: GET
-          path: /hospitals/{hospitalId}/branches
-
-  branchUpdate:
-    handler: src/handlers/branch.update
-    events:
-      - httpApi:
-          method: PUT
-          path: /branches/{id}
-
-  # ─── Users ─────────────────────────────────────────────
-  userCreate:
-    handler: src/handlers/user.create
-    events:
-      - httpApi:
-          method: POST
+      - http:
           path: /users
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  userList:
-    handler: src/handlers/user.list
+  createUser:
+    handler: src/modules/users/handler.createUser
     events:
-      - httpApi:
-          method: GET
+      - http:
           path: /users
+          method: post
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  userGet:
-    handler: src/handlers/user.get
+  getUser:
+    handler: src/modules/users/handler.getUser
     events:
-      - httpApi:
-          method: GET
-          path: /users/{id}
+      - http:
+          path: /users/{userId}
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  userUpdate:
-    handler: src/handlers/user.update
+  updateUser:
+    handler: src/modules/users/handler.updateUser
     events:
-      - httpApi:
-          method: PUT
-          path: /users/{id}
+      - http:
+          path: /users/{userId}
+          method: put
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  userDelete:
-    handler: src/handlers/user.remove
+  deleteUser:
+    handler: src/modules/users/handler.deleteUser
     events:
-      - httpApi:
-          method: DELETE
-          path: /users/{id}
+      - http:
+          path: /users/{userId}
+          method: delete
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  # ─── Patients ──────────────────────────────────────────
-  patientCreate:
-    handler: src/handlers/patient.create
+  getHospital:
+    handler: src/modules/hospitals/handler.getHospital
     events:
-      - httpApi:
-          method: POST
-          path: /patients
+      - http:
+          path: /hospitals/{hospitalId}
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  patientList:
-    handler: src/handlers/patient.list
+  updateHospital:
+    handler: src/modules/hospitals/handler.updateHospital
     events:
-      - httpApi:
-          method: GET
-          path: /patients
+      - http:
+          path: /hospitals/{hospitalId}
+          method: put
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  patientGet:
-    handler: src/handlers/patient.get
+  createBranch:
+    handler: src/modules/branches/handler.createBranch
     events:
-      - httpApi:
-          method: GET
-          path: /patients/{id}
+      - http:
+          path: /hospitals/{hospitalId}/branches
+          method: post
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  patientUpdate:
-    handler: src/handlers/patient.update
+  listBranches:
+    handler: src/modules/branches/handler.listBranches
     events:
-      - httpApi:
-          method: PUT
-          path: /patients/{id}
+      - http:
+          path: /hospitals/{hospitalId}/branches
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  patientSearch:
-    handler: src/handlers/patient.search
+  updateBranch:
+    handler: src/modules/branches/handler.updateBranch
     events:
-      - httpApi:
-          method: GET
-          path: /patients/search
+      - http:
+          path: /hospitals/{hospitalId}/branches/{branchId}
+          method: put
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  # ─── Form Configs ───────────────────────────────────────
-  formConfigGet:
-    handler: src/handlers/form-config.get
+  createDoctor:
+    handler: src/modules/doctors/handler.createDoctor
     events:
-      - httpApi:
-          method: GET
-          path: /forms/config/{formType}
+      - http:
+          path: /hospitals/{hospitalId}/doctors
+          method: post
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  formConfigSave:
-    handler: src/handlers/form-config.save
+  listDoctors:
+    handler: src/modules/doctors/handler.listDoctors
     events:
-      - httpApi:
-          method: PUT
-          path: /forms/config/{formType}
+      - http:
+          path: /hospitals/{hospitalId}/doctors
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  formConfigList:
-    handler: src/handlers/form-config.list
+  updateDoctor:
+    handler: src/modules/doctors/handler.updateDoctor
     events:
-      - httpApi:
-          method: GET
-          path: /forms/config
+      - http:
+          path: /hospitals/{hospitalId}/doctors/{doctorId}
+          method: put
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  # ─── Consultations ─────────────────────────────────────
-  consultationCreate:
-    handler: src/handlers/consultation.create
+  deleteDoctor:
+    handler: src/modules/doctors/handler.deleteDoctor
     events:
-      - httpApi:
-          method: POST
-          path: /consultations
+      - http:
+          path: /hospitals/{hospitalId}/doctors/{doctorId}
+          method: delete
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  consultationGet:
-    handler: src/handlers/consultation.get
+  createForm:
+    handler: src/modules/forms/handler.createForm
     events:
-      - httpApi:
-          method: GET
-          path: /consultations/{id}
+      - http:
+          path: /hospitals/{hospitalId}/forms
+          method: post
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  consultationUpdate:
-    handler: src/handlers/consultation.update
+  listForms:
+    handler: src/modules/forms/handler.listForms
     events:
-      - httpApi:
-          method: PUT
-          path: /consultations/{id}
+      - http:
+          path: /hospitals/{hospitalId}/forms
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  patientConsultations:
-    handler: src/handlers/consultation.listByPatient
+  getForm:
+    handler: src/modules/forms/handler.getForm
     events:
-      - httpApi:
-          method: GET
+      - http:
+          path: /hospitals/{hospitalId}/forms/{formId}
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
+
+  updateForm:
+    handler: src/modules/forms/handler.updateForm
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/forms/{formId}
+          method: put
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
+
+  deleteForm:
+    handler: src/modules/forms/handler.deleteForm
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/forms/{formId}
+          method: delete
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
+
+  publishForm:
+    handler: src/modules/forms/handler.publishForm
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/forms/{formId}/publish
+          method: post
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
+
+  createPatient:
+    handler: src/modules/patients/handler.createPatient
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/branches/{branchId}/patients
+          method: post
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
+
+  listPatients:
+    handler: src/modules/patients/handler.listPatients
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/branches/{branchId}/patients
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
+
+  getPatient:
+    handler: src/modules/patients/handler.getPatient
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/branches/{branchId}/patients/{patientId}
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
+
+  updatePatient:
+    handler: src/modules/patients/handler.updatePatient
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/branches/{branchId}/patients/{patientId}
+          method: put
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
+
+  searchPatients:
+    handler: src/modules/patients/handler.searchPatients
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/patients/search
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
+
+  addHistory:
+    handler: src/modules/patients/handler.addHistory
+    events:
+      - http:
+          path: /patients/{patientId}/history
+          method: post
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
+
+  getHistoryList:
+    handler: src/modules/patients/handler.getHistoryList
+    events:
+      - http:
+          path: /patients/{patientId}/history
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
+
+  getHistoryDetail:
+    handler: src/modules/patients/handler.getHistoryDetail
+    events:
+      - http:
+          path: /patients/{patientId}/history/{historyId}
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
+
+  createConsultation:
+    handler: src/modules/consultations/handler.createConsultation
+    events:
+      - http:
           path: /patients/{patientId}/consultations
+          method: post
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  # ─── Prescriptions ─────────────────────────────────────
-  prescriptionCreate:
-    handler: src/handlers/prescription.create
+  getConsultations:
+    handler: src/modules/consultations/handler.getConsultations
     events:
-      - httpApi:
-          method: POST
-          path: /prescriptions
+      - http:
+          path: /patients/{patientId}/consultations
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  prescriptionGet:
-    handler: src/handlers/prescription.get
+  getConsultationDetail:
+    handler: src/modules/consultations/handler.getConsultationDetail
     events:
-      - httpApi:
-          method: GET
-          path: /prescriptions/{id}
+      - http:
+          path: /patients/{patientId}/consultations/{consultId}
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  patientPrescriptions:
-    handler: src/handlers/prescription.listByPatient
+  updateConsultation:
+    handler: src/modules/consultations/handler.updateConsultation
     events:
-      - httpApi:
-          method: GET
-          path: /patients/{patientId}/prescriptions
+      - http:
+          path: /patients/{patientId}/consultations/{consultId}
+          method: put
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  # ─── Panchakarma ───────────────────────────────────────
-  panchakarmaCreatePlan:
-    handler: src/handlers/panchakarma.createPlan
+  completeConsultation:
+    handler: src/modules/consultations/handler.completeConsultation
     events:
-      - httpApi:
-          method: POST
-          path: /panchakarma/plans
+      - http:
+          path: /patients/{patientId}/consultations/{consultId}/complete
+          method: post
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  panchakarmaGetPlan:
-    handler: src/handlers/panchakarma.getPlan
+  createPrescription:
+    handler: src/modules/prescriptions/handler.createPrescription
     events:
-      - httpApi:
-          method: GET
-          path: /panchakarma/plans/{id}
+      - http:
+          path: /consultations/{consultId}/prescriptions
+          method: post
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  patientPanchakarma:
-    handler: src/handlers/panchakarma.listByPatient
+  getPrescriptions:
+    handler: src/modules/prescriptions/handler.getPrescriptions
     events:
-      - httpApi:
-          method: GET
+      - http:
+          path: /consultations/{consultId}/prescriptions
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
+
+  updatePrescription:
+    handler: src/modules/prescriptions/handler.updatePrescription
+    events:
+      - http:
+          path: /consultations/{consultId}/prescriptions/{rxId}
+          method: put
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
+
+  getPrescriptionPdf:
+    handler: src/modules/prescriptions/handler.getPrescriptionPdf
+    layers:
+      - { Ref: PdfkitLayerLambdaLayer }
+    events:
+      - http:
+          path: /prescriptions/{rxId}/pdf
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
+
+  createPanchakarma:
+    handler: src/modules/panchakarma/handler.createPanchakarma
+    events:
+      - http:
           path: /patients/{patientId}/panchakarma
+          method: post
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  panchakarmaAddSession:
-    handler: src/handlers/panchakarma.addSession
+  getPanchakarmas:
+    handler: src/modules/panchakarma/handler.getPanchakarmas
     events:
-      - httpApi:
-          method: POST
-          path: /panchakarma/plans/{id}/sessions
+      - http:
+          path: /patients/{patientId}/panchakarma
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  panchakarmaListSessions:
-    handler: src/handlers/panchakarma.listSessions
+  getPanchakarma:
+    handler: src/modules/panchakarma/handler.getPanchakarma
     events:
-      - httpApi:
-          method: GET
-          path: /panchakarma/plans/{id}/sessions
+      - http:
+          path: /panchakarma/{pkId}
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  panchakarmaUpdateSession:
-    handler: src/handlers/panchakarma.updateSession
+  updatePanchakarma:
+    handler: src/modules/panchakarma/handler.updatePanchakarma
     events:
-      - httpApi:
-          method: PUT
-          path: /panchakarma/sessions/{sessionId}
+      - http:
+          path: /panchakarma/{pkId}
+          method: put
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  # ─── Token / Queue ─────────────────────────────────────
-  tokenCreate:
-    handler: src/handlers/token.create
+  addSession:
+    handler: src/modules/panchakarma/handler.addSession
     events:
-      - httpApi:
-          method: POST
-          path: /tokens
+      - http:
+          path: /panchakarma/{pkId}/sessions
+          method: post
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  tokenQueue:
-    handler: src/handlers/token.getQueue
+  getSessions:
+    handler: src/modules/panchakarma/handler.getSessions
     events:
-      - httpApi:
-          method: GET
-          path: /tokens/queue
+      - http:
+          path: /panchakarma/{pkId}/sessions
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  tokenUpdateStatus:
-    handler: src/handlers/token.updateStatus
+  updateSession:
+    handler: src/modules/panchakarma/handler.updateSession
     events:
-      - httpApi:
-          method: PUT
-          path: /tokens/{id}/status
+      - http:
+          path: /panchakarma/{pkId}/sessions/{sessionId}
+          method: put
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  tokenDisplay:
-    handler: src/handlers/token.display
+  completePanchakarma:
+    handler: src/modules/panchakarma/handler.completePanchakarma
     events:
-      - httpApi:
-          method: GET
-          path: /tokens/display
+      - http:
+          path: /panchakarma/{pkId}/complete
+          method: post
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  # ─── Billing ───────────────────────────────────────────
-  billCreate:
-    handler: src/handlers/billing.create
+  getPkReportPdf:
+    handler: src/modules/panchakarma/handler.getPkReportPdf
+    layers:
+      - { Ref: PdfkitLayerLambdaLayer }
     events:
-      - httpApi:
-          method: POST
-          path: /billing
+      - http:
+          path: /panchakarma/{pkId}/report/pdf
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  billGet:
-    handler: src/handlers/billing.get
+  createToken:
+    handler: src/modules/tokens/handler.createToken
     events:
-      - httpApi:
-          method: GET
-          path: /billing/{id}
+      - http:
+          path: /hospitals/{hospitalId}/branches/{branchId}/tokens
+          method: post
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  billPayment:
-    handler: src/handlers/billing.recordPayment
+  getTokensToday:
+    handler: src/modules/tokens/handler.getTokensToday
     events:
-      - httpApi:
-          method: PUT
-          path: /billing/{id}/payment
+      - http:
+          path: /hospitals/{hospitalId}/branches/{branchId}/tokens/today
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  patientBills:
-    handler: src/handlers/billing.listByPatient
+  getDisplayQueue:
+    handler: src/modules/tokens/handler.getDisplayQueue
+    role: !GetAtt DisplayBoardRole.Arn
     events:
-      - httpApi:
-          method: GET
+      - http:
+          path: /hospitals/{hospitalId}/branches/{branchId}/tokens/display
+          method: get
+          cors: true
+
+  callToken:
+    handler: src/modules/tokens/handler.callToken
+    events:
+      - http:
+          path: /tokens/{tokenId}/call
+          method: put
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
+
+  skipToken:
+    handler: src/modules/tokens/handler.skipToken
+    events:
+      - http:
+          path: /tokens/{tokenId}/skip
+          method: put
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
+
+  completeToken:
+    handler: src/modules/tokens/handler.completeToken
+    events:
+      - http:
+          path: /tokens/{tokenId}/complete
+          method: put
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
+
+  updatePriority:
+    handler: src/modules/tokens/handler.updatePriority
+    events:
+      - http:
+          path: /tokens/{tokenId}/priority
+          method: put
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
+
+  getNextToken:
+    handler: src/modules/tokens/handler.getNextToken
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/branches/{branchId}/tokens/next/{doctorId}
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
+
+  createBill:
+    handler: src/modules/billing/handler.createBill
+    events:
+      - http:
           path: /patients/{patientId}/bills
+          method: post
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  # ─── Inventory ─────────────────────────────────────────
-  inventoryItemCreate:
-    handler: src/handlers/inventory.createItem
+  getPatientBills:
+    handler: src/modules/billing/handler.getPatientBills
     events:
-      - httpApi:
-          method: POST
-          path: /inventory/items
+      - http:
+          path: /patients/{patientId}/bills
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  inventoryItemList:
-    handler: src/handlers/inventory.listItems
+  getBill:
+    handler: src/modules/billing/handler.getBill
     events:
-      - httpApi:
-          method: GET
-          path: /inventory/items
+      - http:
+          path: /bills/{billId}
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  inventoryItemGet:
-    handler: src/handlers/inventory.getItem
+  updateBill:
+    handler: src/modules/billing/handler.updateBill
     events:
-      - httpApi:
-          method: GET
-          path: /inventory/items/{id}
+      - http:
+          path: /bills/{billId}
+          method: put
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  inventoryItemUpdate:
-    handler: src/handlers/inventory.updateItem
+  addPayment:
+    handler: src/modules/billing/handler.addPayment
     events:
-      - httpApi:
-          method: PUT
-          path: /inventory/items/{id}
+      - http:
+          path: /bills/{billId}/payment
+          method: post
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  inventoryStockIn:
-    handler: src/handlers/inventory.stockIn
+  getBillPdf:
+    handler: src/modules/billing/handler.getBillPdf
+    layers:
+      - { Ref: PdfkitLayerLambdaLayer }
     events:
-      - httpApi:
-          method: POST
-          path: /inventory/stock-in
+      - http:
+          path: /bills/{billId}/pdf
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  inventoryStockAdjust:
-    handler: src/handlers/inventory.stockAdjust
+  getBillsSummary:
+    handler: src/modules/billing/handler.getBillsSummary
     events:
-      - httpApi:
-          method: POST
-          path: /inventory/stock-adjust
+      - http:
+          path: /hospitals/{hospitalId}/bills/summary
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  inventoryLowStock:
-    handler: src/handlers/inventory.lowStockAlerts
+  createInventoryItem:
+    handler: src/modules/inventory/handler.createItem
     events:
-      - httpApi:
-          method: GET
-          path: /inventory/alerts/low-stock
+      - http:
+          path: /hospitals/{hospitalId}/inventory
+          method: post
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  inventoryExpiry:
-    handler: src/handlers/inventory.expiryAlerts
+  listInventoryItems:
+    handler: src/modules/inventory/handler.listItems
     events:
-      - httpApi:
-          method: GET
-          path: /inventory/alerts/expiry
+      - http:
+          path: /hospitals/{hospitalId}/inventory
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  # ─── Reports ───────────────────────────────────────────
-  reportDailyOpd:
-    handler: src/handlers/report.dailyOpd
-    timeout: 29
-    memorySize: 512
+  getInventoryItem:
+    handler: src/modules/inventory/handler.getItem
     events:
-      - httpApi:
-          method: GET
-          path: /reports/daily-opd
+      - http:
+          path: /hospitals/{hospitalId}/inventory/{itemId}
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  reportRevenue:
-    handler: src/handlers/report.revenue
-    timeout: 29
-    memorySize: 512
+  updateInventoryItem:
+    handler: src/modules/inventory/handler.updateItem
     events:
-      - httpApi:
-          method: GET
-          path: /reports/revenue
+      - http:
+          path: /hospitals/{hospitalId}/inventory/{itemId}
+          method: put
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  reportInventoryUsage:
-    handler: src/handlers/report.inventoryUsage
-    timeout: 29
-    memorySize: 512
+  deleteInventoryItem:
+    handler: src/modules/inventory/handler.deleteItem
     events:
-      - httpApi:
-          method: GET
-          path: /reports/inventory-usage
+      - http:
+          path: /hospitals/{hospitalId}/inventory/{itemId}
+          method: delete
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  reportLowStock:
-    handler: src/handlers/report.lowStock
+  stockInInventoryItem:
+    handler: src/modules/inventory/handler.stockIn
     events:
-      - httpApi:
-          method: GET
-          path: /reports/low-stock
+      - http:
+          path: /hospitals/{hospitalId}/inventory/{itemId}/stock-in
+          method: post
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  reportPatientHistory:
-    handler: src/handlers/report.patientHistory
-    timeout: 29
-    memorySize: 512
+  stockAdjustInventoryItem:
+    handler: src/modules/inventory/handler.stockAdjust
     events:
-      - httpApi:
-          method: GET
-          path: /patients/{patientId}/report
+      - http:
+          path: /hospitals/{hospitalId}/inventory/{itemId}/stock-adjust
+          method: post
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  # ─── Dashboard ─────────────────────────────────────────
-  dashboardSummary:
-    handler: src/handlers/dashboard.summary
-    timeout: 15
-    memorySize: 512
+  getLowStockAlerts:
+    handler: src/modules/inventory/handler.getLowStockAlerts
     events:
-      - httpApi:
-          method: GET
-          path: /dashboard/summary
+      - http:
+          path: /hospitals/{hospitalId}/inventory/alerts/low-stock
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  dashboardAnalytics:
-    handler: src/handlers/dashboard.analytics
-    timeout: 29
-    memorySize: 512
+  getExpiryAlerts:
+    handler: src/modules/inventory/handler.getExpiryAlerts
     events:
-      - httpApi:
-          method: GET
-          path: /dashboard/analytics
+      - http:
+          path: /hospitals/{hospitalId}/inventory/alerts/expiry
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-resources:
-  Resources:
-    # ─── Existing Tables ───────────────────────────────
-    HospitalsTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ${self:provider.environment.HOSPITALS_TABLE}
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: hospital_id
-            AttributeType: S
-          - AttributeName: hospital_code
-            AttributeType: S
-        KeySchema:
-          - AttributeName: hospital_id
-            KeyType: HASH
-        GlobalSecondaryIndexes:
-          - IndexName: hospital_code-index
-            KeySchema:
-              - AttributeName: hospital_code
-                KeyType: HASH
-            Projection:
-              ProjectionType: ALL
+  inventoryAlertScheduler:
+    handler: src/modules/inventory/scheduledAlerts.handler
+    role: !GetAtt InventorySchedulerRole.Arn
+    events:
+      - schedule: cron(0 1 * * ? *)
+    reservedConcurrency: 1
 
-    UsersTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ${self:provider.environment.USERS_TABLE}
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: user_id
-            AttributeType: S
-          - AttributeName: cognito_user_id
-            AttributeType: S
-          - AttributeName: hospital_id
-            AttributeType: S
-        KeySchema:
-          - AttributeName: user_id
-            KeyType: HASH
-        GlobalSecondaryIndexes:
-          - IndexName: cognito_user_id-index
-            KeySchema:
-              - AttributeName: cognito_user_id
-                KeyType: HASH
-            Projection:
-              ProjectionType: ALL
-          - IndexName: hospital_id-index
-            KeySchema:
-              - AttributeName: hospital_id
-                KeyType: HASH
-            Projection:
-              ProjectionType: ALL
+  triggerFullHistory:
+    handler: src/modules/reports/handler.triggerFullHistory
+    events:
+      - http:
+          path: /patients/{patientId}/reports/full-history/pdf
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-    # ─── Branches ──────────────────────────────────────
-    BranchesTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ${self:provider.environment.BRANCHES_TABLE}
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: branch_id
-            AttributeType: S
-          - AttributeName: hospital_id
-            AttributeType: S
-        KeySchema:
-          - AttributeName: branch_id
-            KeyType: HASH
-        GlobalSecondaryIndexes:
-          - IndexName: hospital_id-index
-            KeySchema:
-              - AttributeName: hospital_id
-                KeyType: HASH
-            Projection:
-              ProjectionType: ALL
+  triggerVisitSummary:
+    handler: src/modules/reports/handler.triggerVisitSummary
+    events:
+      - http:
+          path: /consultations/{consultId}/reports/visit-summary/pdf
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-    # ─── Patients ──────────────────────────────────────
-    PatientsTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ${self:provider.environment.PATIENTS_TABLE}
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: patient_id
-            AttributeType: S
-          - AttributeName: hospital_id
-            AttributeType: S
-          - AttributeName: registered_at
-            AttributeType: S
-        KeySchema:
-          - AttributeName: patient_id
-            KeyType: HASH
-        GlobalSecondaryIndexes:
-          - IndexName: hospital_id-date-index
-            KeySchema:
-              - AttributeName: hospital_id
-                KeyType: HASH
-              - AttributeName: registered_at
-                KeyType: RANGE
-            Projection:
-              ProjectionType: ALL
+  triggerPkSummary:
+    handler: src/modules/reports/handler.triggerPkSummary
+    events:
+      - http:
+          path: /panchakarma/{pkId}/reports/treatment-summary/pdf
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-    # ─── Form Configs ───────────────────────────────────
-    FormConfigsTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ${self:provider.environment.FORM_CONFIGS_TABLE}
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: hospital_id
-            AttributeType: S
-          - AttributeName: form_type
-            AttributeType: S
-        KeySchema:
-          - AttributeName: hospital_id
-            KeyType: HASH
-          - AttributeName: form_type
-            KeyType: RANGE
+  triggerDischargeSummary:
+    handler: src/modules/reports/handler.triggerDischargeSummary
+    events:
+      - http:
+          path: /patients/{patientId}/reports/discharge-summary/pdf
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-    # ─── Consultations ─────────────────────────────────
-    ConsultationsTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ${self:provider.environment.CONSULTATIONS_TABLE}
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: consultation_id
-            AttributeType: S
-          - AttributeName: patient_id
-            AttributeType: S
-          - AttributeName: hospital_id
-            AttributeType: S
-          - AttributeName: consultation_date
-            AttributeType: S
-        KeySchema:
-          - AttributeName: consultation_id
-            KeyType: HASH
-        GlobalSecondaryIndexes:
-          - IndexName: patient_id-index
-            KeySchema:
-              - AttributeName: patient_id
-                KeyType: HASH
-              - AttributeName: consultation_date
-                KeyType: RANGE
-            Projection:
-              ProjectionType: ALL
-          - IndexName: hospital_id-date-index
-            KeySchema:
-              - AttributeName: hospital_id
-                KeyType: HASH
-              - AttributeName: consultation_date
-                KeyType: RANGE
-            Projection:
-              ProjectionType: ALL
+  getDailyOpd:
+    handler: src/modules/reports/handler.getDailyOpd
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/reports/daily-opd
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-    # ─── Prescriptions ─────────────────────────────────
-    PrescriptionsTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ${self:provider.environment.PRESCRIPTIONS_TABLE}
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: prescription_id
-            AttributeType: S
-          - AttributeName: consultation_id
-            AttributeType: S
-          - AttributeName: patient_id
-            AttributeType: S
-        KeySchema:
-          - AttributeName: prescription_id
-            KeyType: HASH
-        GlobalSecondaryIndexes:
-          - IndexName: consultation_id-index
-            KeySchema:
-              - AttributeName: consultation_id
-                KeyType: HASH
-            Projection:
-              ProjectionType: ALL
-          - IndexName: patient_id-index
-            KeySchema:
-              - AttributeName: patient_id
-                KeyType: HASH
-            Projection:
-              ProjectionType: ALL
+  getRevenueReport:
+    handler: src/modules/reports/handler.getRevenueReport
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/reports/revenue
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-    # ─── Panchakarma Plans ─────────────────────────────
-    PanchakarmaPlansTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ${self:provider.environment.PANCHAKARMA_PLANS_TABLE}
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: plan_id
-            AttributeType: S
-          - AttributeName: patient_id
-            AttributeType: S
-          - AttributeName: hospital_id
-            AttributeType: S
-        KeySchema:
-          - AttributeName: plan_id
-            KeyType: HASH
-        GlobalSecondaryIndexes:
-          - IndexName: patient_id-index
-            KeySchema:
-              - AttributeName: patient_id
-                KeyType: HASH
-            Projection:
-              ProjectionType: ALL
-          - IndexName: hospital_id-index
-            KeySchema:
-              - AttributeName: hospital_id
-                KeyType: HASH
-            Projection:
-              ProjectionType: ALL
+  getInventoryUsage:
+    handler: src/modules/reports/handler.getInventoryUsage
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/reports/inventory-usage
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-    # ─── Panchakarma Sessions ──────────────────────────
-    PanchakarmaSessionsTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ${self:provider.environment.PANCHAKARMA_SESSIONS_TABLE}
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: plan_id
-            AttributeType: S
-          - AttributeName: session_id
-            AttributeType: S
-        KeySchema:
-          - AttributeName: plan_id
-            KeyType: HASH
-          - AttributeName: session_id
-            KeyType: RANGE
+  getDoctorLoad:
+    handler: src/modules/reports/handler.getDoctorLoad
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/reports/doctor-load
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-    # ─── Tokens ────────────────────────────────────────
-    TokensTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ${self:provider.environment.TOKENS_TABLE}
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: token_id
-            AttributeType: S
-          - AttributeName: hospital_id
-            AttributeType: S
-          - AttributeName: token_date
-            AttributeType: S
-        KeySchema:
-          - AttributeName: token_id
-            KeyType: HASH
-        GlobalSecondaryIndexes:
-          - IndexName: hospital_id-date-index
-            KeySchema:
-              - AttributeName: hospital_id
-                KeyType: HASH
-              - AttributeName: token_date
-                KeyType: RANGE
-            Projection:
-              ProjectionType: ALL
+  getReportsLowStock:
+    handler: src/modules/reports/handler.getLowStockAlerts
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/reports/low-stock
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-    # ─── Bills ─────────────────────────────────────────
-    BillsTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ${self:provider.environment.BILLS_TABLE}
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: bill_id
-            AttributeType: S
-          - AttributeName: patient_id
-            AttributeType: S
-          - AttributeName: hospital_id
-            AttributeType: S
-          - AttributeName: bill_date
-            AttributeType: S
-        KeySchema:
-          - AttributeName: bill_id
-            KeyType: HASH
-        GlobalSecondaryIndexes:
-          - IndexName: patient_id-index
-            KeySchema:
-              - AttributeName: patient_id
-                KeyType: HASH
-            Projection:
-              ProjectionType: ALL
-          - IndexName: hospital_id-date-index
-            KeySchema:
-              - AttributeName: hospital_id
-                KeyType: HASH
-              - AttributeName: bill_date
-                KeyType: RANGE
-            Projection:
-              ProjectionType: ALL
+  getReportsExpiry:
+    handler: src/modules/reports/handler.getExpiryAlerts
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/reports/expiry
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-    # ─── Inventory Items ───────────────────────────────
-    InventoryItemsTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ${self:provider.environment.INVENTORY_ITEMS_TABLE}
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: item_id
-            AttributeType: S
-          - AttributeName: hospital_id
-            AttributeType: S
-        KeySchema:
-          - AttributeName: item_id
-            KeyType: HASH
-        GlobalSecondaryIndexes:
-          - IndexName: hospital_id-index
-            KeySchema:
-              - AttributeName: hospital_id
-                KeyType: HASH
-            Projection:
-              ProjectionType: ALL
+  getJobStatus:
+    handler: src/modules/reports/handler.getJobStatus
+    events:
+      - http:
+          path: /reports/jobs/{jobId}
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-    # ─── Stock Movements ───────────────────────────────
-    StockMovementsTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ${self:provider.environment.STOCK_MOVEMENTS_TABLE}
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: item_id
-            AttributeType: S
-          - AttributeName: movement_id
-            AttributeType: S
-          - AttributeName: hospital_id
-            AttributeType: S
-          - AttributeName: movement_date
-            AttributeType: S
-        KeySchema:
-          - AttributeName: item_id
-            KeyType: HASH
-          - AttributeName: movement_id
-            KeyType: RANGE
-        GlobalSecondaryIndexes:
-          - IndexName: hospital_id-date-index
-            KeySchema:
-              - AttributeName: hospital_id
-                KeyType: HASH
-              - AttributeName: movement_date
-                KeyType: RANGE
-            Projection:
-              ProjectionType: ALL
+  reportWorker:
+    handler: src/modules/reports/reportWorker.handler
+    role: !GetAtt ReportWorkerRole.Arn
+    reservedConcurrency: 5
+    layers:
+      - { Ref: PdfkitLayerLambdaLayer }
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - ReportQueue
+              - Arn
+          batchSize: 1
 
-    # ─── Audit Log ───────────────────────────────────────
-    AuditLogTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ${self:provider.environment.AUDIT_LOG_TABLE}
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: audit_id
-            AttributeType: S
-          - AttributeName: hospital_id
-            AttributeType: S
-          - AttributeName: timestamp
-            AttributeType: S
-        KeySchema:
-          - AttributeName: audit_id
-            KeyType: HASH
-        GlobalSecondaryIndexes:
-          - IndexName: hospital_id-timestamp-index
-            KeySchema:
-              - AttributeName: hospital_id
-                KeyType: HASH
-              - AttributeName: timestamp
-                KeyType: RANGE
-            Projection:
-              ProjectionType: ALL
+  getAdminDashboard:
+    handler: src/modules/dashboard/handler.getAdminDashboard
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/dashboard/admin
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-    # ─── Cognito ───────────────────────────────────────
-    AyurmediUserPool:
-      Type: AWS::Cognito::UserPool
-      Properties:
-        UserPoolName: ayurmedi-user-pool-${self:provider.stage}
-        UsernameAttributes:
-          - email
-        AutoVerifiedAttributes:
-          - email
-        Schema:
-          - Name: email
-            Required: true
-            Mutable: true
-          - Name: hospital_id
-            AttributeDataType: String
-            Mutable: true
-          - Name: role
-            AttributeDataType: String
-            Mutable: true
-          - Name: branch_id
-            AttributeDataType: String
-            Mutable: true
+  getDoctorDashboard:
+    handler: src/modules/dashboard/handler.getDoctorDashboard
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/dashboard/doctor
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-    AyurmediUserPoolClient:
-      Type: AWS::Cognito::UserPoolClient
-      Properties:
-        UserPoolId: !Ref AyurmediUserPool
-        ClientName: ayurmedi-app-client-${self:provider.stage}
-        GenerateSecret: false
-        ExplicitAuthFlows:
-          - ALLOW_ADMIN_USER_PASSWORD_AUTH
-          - ALLOW_USER_PASSWORD_AUTH
-          - ALLOW_USER_SRP_AUTH
-          - ALLOW_REFRESH_TOKEN_AUTH
+  getReceptionDashboard:
+    handler: src/modules/dashboard/handler.getReceptionDashboard
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/dashboard/reception
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
 
-  Outputs:
-    UserPoolId:
-      Value: !Ref AyurmediUserPool
-    UserPoolClientId:
-      Value: !Ref AyurmediUserPoolClient
-    HospitalsTableName:
-      Value: ${self:provider.environment.HOSPITALS_TABLE}
-    UsersTableName:
-      Value: ${self:provider.environment.USERS_TABLE}
-    PatientsTableName:
-      Value: ${self:provider.environment.PATIENTS_TABLE}
-    TokensTableName:
-      Value: ${self:provider.environment.TOKENS_TABLE}
-    BillsTableName:
-      Value: ${self:provider.environment.BILLS_TABLE}
-    InventoryItemsTableName:
-      Value: ${self:provider.environment.INVENTORY_ITEMS_TABLE}
+  scheduledKpi:
+    handler: src/modules/dashboard/scheduledKpi.handler
+    events:
+      - schedule: cron(55 18 * * ? *)
+    reservedConcurrency: 2
 
-plugins:
-  - serverless-offline
+layers:
+  pdfkitLayer:
+    path: src/layers/pdfkit
+    name: ${sls:stage}-pdfkit-layer
+    description: PDFKit dependencies for prescription generation
+    compatibleRuntimes:
+      - nodejs20.x
+
+custom:
+  prune:
+    automatic: true
+    number: 3
+  exportOutputs:
+    include:
+      - CognitoUserPoolId
+      - CognitoClientId
+      - S3BucketName
+      - ApiGatewayUrl
+    output:
+      file: ./.env.deployed
+  dynamodb:
+    start:
+      port: 8000
+      inMemory: true
+      migrate: true
+    stages:
+      - dev
+      - test

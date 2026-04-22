@@ -1,0 +1,278 @@
+# Panchakarma & Tokens Stack
+service: ayurmedi-therapy
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ap-south-1
+  stage: ${opt:stage, 'dev'}
+  tracing:
+    lambda: true
+    apiGateway: true
+  timeout: 29
+  memorySize: 512
+  environment:
+    STAGE: ${self:provider.stage}
+    TABLE_NAME: ${ssm:/ayurmedi/${self:provider.stage}/TABLE_NAME, 'AyurMediTable-dev'}
+    COGNITO_USER_POOL_ID: ${ssm:/ayurmedi/${self:provider.stage}/COGNITO_USER_POOL_ID, 'ap-south-1_mockPool1'}
+    COGNITO_APP_CLIENT_ID: ${ssm:/ayurmedi/${self:provider.stage}/COGNITO_APP_CLIENT_ID, 'mockClient1234'}
+    S3_BUCKET: ${ssm:/ayurmedi/${self:provider.stage}/S3_BUCKET, 'mock-bucket'}
+    REDIS_URL: ${ssm:/ayurmedi/${self:provider.stage}/REDIS_URL, 'localhost'}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:GetItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:TransactWrite
+          Resource:
+            - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TABLE_NAME}
+            - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TABLE_NAME}/index/*
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource:
+            - arn:aws:logs:${self:provider.region}:*:log-group:/aws/lambda/*:*:*
+        - Effect: Allow
+          Action:
+            - xray:PutTraceSegments
+            - xray:PutTelemetryRecords
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - ssm:GetParameter
+          Resource:
+            - arn:aws:ssm:${self:provider.region}:*:parameter/ayurmedi/${self:provider.stage}/*
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+            - s3:GetObject
+          Resource:
+            - arn:aws:s3:::${self:provider.environment.S3_BUCKET}/hospitals/*
+        - Effect: Allow
+          Action:
+            - cognito-idp:AdminGetUser
+          Resource: "*"
+
+functions:
+  createPanchakarma:
+    handler: src/modules/panchakarma/handler.createPanchakarma
+    events:
+      - http:
+          path: /patients/{patientId}/panchakarma
+          method: post
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  listPanchakarma:
+    handler: src/modules/panchakarma/handler.listPanchakarma
+    events:
+      - http:
+          path: /patients/{patientId}/panchakarma
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  getPanchakarmaDetail:
+    handler: src/modules/panchakarma/handler.getPanchakarmaDetail
+    events:
+      - http:
+          path: /panchakarma/{pkId}
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  updatePanchakarma:
+    handler: src/modules/panchakarma/handler.updatePanchakarma
+    events:
+      - http:
+          path: /panchakarma/{pkId}
+          method: put
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  completePanchakarma:
+    handler: src/modules/panchakarma/handler.completePanchakarma
+    events:
+      - http:
+          path: /panchakarma/{pkId}/complete
+          method: post
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  createPkSession:
+    handler: src/modules/panchakarma/handler.createPkSession
+    events:
+      - http:
+          path: /panchakarma/{pkId}/sessions
+          method: post
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  listPkSessions:
+    handler: src/modules/panchakarma/handler.listPkSessions
+    events:
+      - http:
+          path: /panchakarma/{pkId}/sessions
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  updatePkSession:
+    handler: src/modules/panchakarma/handler.updatePkSession
+    events:
+      - http:
+          path: /panchakarma/{pkId}/sessions/{sessionId}
+          method: put
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  getPkReportPdf:
+    handler: src/modules/panchakarma/handler.getPkReportPdf
+    events:
+      - http:
+          path: /panchakarma/{pkId}/report/pdf
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  getPkTreatmentSummaryPdf:
+    handler: src/modules/panchakarma/handler.getPkTreatmentSummaryPdf
+    events:
+      - http:
+          path: /panchakarma/{pkId}/reports/treatment-summary/pdf
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  createToken:
+    handler: src/modules/tokens/handler.createToken
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/branches/{branchId}/tokens
+          method: post
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  getTodayTokens:
+    handler: src/modules/tokens/handler.getTodayTokens
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/branches/{branchId}/tokens/today
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  getDisplayQueue:
+    handler: src/modules/tokens/handler.getDisplayQueue
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/branches/{branchId}/display-queue
+          method: get
+          cors: true
+
+  callToken:
+    handler: src/modules/tokens/handler.callToken
+    events:
+      - http:
+          path: /tokens/{tokenId}/call
+          method: put
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  skipToken:
+    handler: src/modules/tokens/handler.skipToken
+    events:
+      - http:
+          path: /tokens/{tokenId}/skip
+          method: put
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  completeToken:
+    handler: src/modules/tokens/handler.completeToken
+    events:
+      - http:
+          path: /tokens/{tokenId}/complete
+          method: put
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  updateTokenPriority:
+    handler: src/modules/tokens/handler.updateTokenPriority
+    events:
+      - http:
+          path: /tokens/{tokenId}/priority
+          method: put
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+  getNextToken:
+    handler: src/modules/tokens/handler.getNextToken
+    events:
+      - http:
+          path: /hospitals/{hospitalId}/branches/{branchId}/doctors/{doctorId}/next-token
+          method: get
+          cors: true
+          authorizer:
+            type: token
+            authorizerId: !Ref SharedAuthorizer
+
+resources:
+  Resources:
+    SharedAuthorizer:
+      Type: AWS::ApiGateway::Authorizer
+      Properties:
+        Name: cognitoAuthorizer-${self:provider.stage}
+        Type: TOKEN
+        AuthorizerUri: arn:aws:apigateway:${self:provider.region}:lambda:path/2015-03-31/functions/${cf:ayurmedi-auth-${self:provider.stage}.AuthorizerLambdaArn}/invocations
+        IdentitySource: method.request.header.Authorization
+        AuthorizerResultTtlInSeconds: 300
+        RestApiId: !Ref ApiGatewayRestApi
+
+    AuthorizerPermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        FunctionName: ${cf:ayurmedi-auth-${self:provider.stage}.AuthorizerLambdaArn}
+        Action: lambda:InvokeFunction
+        Principal: apigateway.amazonaws.com
+        SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayRestApi}/*/*"

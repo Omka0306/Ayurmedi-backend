@@ -1,0 +1,1428 @@
+openapi: "3.0.3"
+
+info:
+  title: AyurMedi API
+  version: "1.0.0"
+  description: |
+    REST API for AyurMedi — a multi-tenant Ayurvedic Hospital Management System.
+    
+    All endpoints (except the public display board) require a Bearer JWT token
+    obtained via `POST /auth/login`. The token encodes `hospitalId`, `role`, and `userId`.
+    
+    Multi-tenancy is enforced at every endpoint: the JWT `hospitalId` must match the
+    `{hospitalId}` path parameter or the request is rejected with `403`.
+
+servers:
+  - url: https://xxxxxxxxxx.execute-api.ap-south-1.amazonaws.com/dev
+    description: Development (AWS API Gateway)
+  - url: https://xxxxxxxxxx.execute-api.ap-south-1.amazonaws.com/prod
+    description: Production (AWS API Gateway)
+
+tags:
+  - name: Auth
+    description: Authentication and hospital registration
+  - name: Users
+    description: User management within a hospital
+  - name: Hospitals
+    description: Hospital profile management
+  - name: Branches
+    description: Branch management
+  - name: Doctors
+    description: Doctor profiles
+  - name: Patients
+    description: Patient registration and management
+  - name: Consultations
+    description: Clinical consultation records
+  - name: Prescriptions
+    description: Ayurvedic prescriptions (medicines + treatments)
+  - name: Panchakarma
+    description: Panchakarma plans and sessions
+  - name: Billing
+    description: Bills and payments
+  - name: Tokens
+    description: OPD queue token management
+  - name: Inventory
+    description: Medicine and supply inventory
+  - name: Forms
+    description: Dynamic form template management
+  - name: Reports
+    description: Operational and clinical reports (async PDF)
+  - name: Dashboard
+    description: Role-based KPI dashboards
+
+security:
+  - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "Obtain token from POST /auth/login. Include as: Authorization: Bearer <token>"
+
+  schemas:
+    # ── Common ──────────────────────────────────────────────────────────────
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: "Validation error: field X is required"
+
+    PaginatedResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                type: object
+            lastKey:
+              type: string
+              nullable: true
+
+    Address:
+      type: object
+      required: [line1, city, state, zip]
+      properties:
+        line1: { type: string, example: "123 Ayurveda Marg" }
+        line2: { type: string, example: "Near Station" }
+        city: { type: string, example: "Pune" }
+        state: { type: string, example: "Maharashtra" }
+        zip: { type: string, example: "411001" }
+
+    # ── Auth ─────────────────────────────────────────────────────────────────
+    RegisterHospitalRequest:
+      type: object
+      required: [hospitalName, adminEmail, password, hospitalType, phone]
+      properties:
+        hospitalName: { type: string, example: "Mitram Ayurveda" }
+        adminEmail: { type: string, format: email, example: "admin@mitramayurveda.com" }
+        password: { type: string, minLength: 8, example: "Admin@1234!" }
+        hospitalType: { type: string, enum: [AYURVEDIC, MULTISPECIALTY, CLINIC], example: "AYURVEDIC" }
+        phone: { type: string, pattern: "^[6-9]\\d{9}$", example: "9876543210" }
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email, example: "admin@mitramayurveda.com" }
+        password: { type: string, example: "Admin@1234!" }
+
+    LoginResponse:
+      type: object
+      properties:
+        accessToken: { type: string }
+        refreshToken: { type: string }
+        idToken: { type: string }
+        expiresIn: { type: integer, example: 3600 }
+        userId: { type: string, format: uuid }
+        hospitalId: { type: string, format: uuid }
+        role: { type: string, enum: [SUPER_ADMIN, HOSPITAL_ADMIN, DOCTOR, RECEPTIONIST] }
+
+    # ── Users ────────────────────────────────────────────────────────────────
+    CreateUserRequest:
+      type: object
+      required: [email, password, firstName, lastName, phone, role]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, minLength: 8 }
+        firstName: { type: string, example: "Shashikant" }
+        lastName: { type: string, example: "Kumar" }
+        phone: { type: string, example: "9876543210" }
+        role: { type: string, enum: [HOSPITAL_ADMIN, DOCTOR, ASSISTANT_DOCTOR, RECEPTIONIST] }
+        branchId: { type: string, format: uuid }
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        firstName: { type: string }
+        lastName: { type: string }
+        phone: { type: string }
+        role: { type: string, enum: [HOSPITAL_ADMIN, DOCTOR, ASSISTANT_DOCTOR, RECEPTIONIST] }
+        status: { type: string, enum: [ACTIVE, INACTIVE] }
+
+    # ── Branches ─────────────────────────────────────────────────────────────
+    CreateBranchRequest:
+      type: object
+      required: [name, address, phone]
+      properties:
+        name: { type: string, example: "Main Branch" }
+        address: { $ref: "#/components/schemas/Address" }
+        phone: { type: string, example: "9876543210" }
+        isMainBranch: { type: boolean, default: false }
+
+    # ── Doctors ──────────────────────────────────────────────────────────────
+    CreateDoctorRequest:
+      type: object
+      required: [userId, branchIds, name, specialization, registrationNumber]
+      properties:
+        userId: { type: string, format: uuid }
+        branchIds: { type: array, items: { type: string, format: uuid }, minItems: 1 }
+        name: { type: string, example: "Vaidya Shashikant Kumar" }
+        specialization: { type: string, example: "Panchakarma" }
+        registrationNumber: { type: string, example: "MAH-AY-001" }
+        averageConsultationMinutes: { type: integer, minimum: 5, default: 15 }
+
+    # ── Patients ─────────────────────────────────────────────────────────────
+    FormData:
+      type: object
+      required: [formTemplateId, formVersion, responses]
+      properties:
+        formTemplateId: { type: string, format: uuid }
+        formVersion: { type: integer, example: 1 }
+        responses:
+          type: object
+          additionalProperties: true
+          example:
+            "uuid-field-id-1": "Ramesh Kulkarni"
+            "uuid-field-id-2": 45
+
+    CreatePatientRequest:
+      type: object
+      required: [patientName, assignedDoctorId, mobileNumber, formData]
+      properties:
+        patientName: { type: string, example: "Ramesh Narayan Kulkarni" }
+        assignedDoctorId: { type: string, format: uuid }
+        mobileNumber: { type: string, pattern: "^[6-9]\\d{9}$", example: "9876543210" }
+        formData: { $ref: "#/components/schemas/FormData" }
+
+    # ── Consultations ────────────────────────────────────────────────────────
+    VitalSigns:
+      type: object
+      properties:
+        bp: { type: string, example: "130/80" }
+        pulse: { type: integer, example: 78 }
+        temperature: { type: number, example: 98.6 }
+        weight: { type: number, example: 72 }
+        height: { type: number, example: 170 }
+
+    AshtavidhaPariksha:
+      type: object
+      properties:
+        nadi: { type: string, example: "Pittaj" }
+        mala: { type: string, example: "Samyak" }
+        mutra: { type: string, example: "Pita varna" }
+        jihwa: { type: string, example: "Pitta avarana" }
+        shabda: { type: string, example: "Spashta" }
+        sparsha: { type: string, example: "Ushna" }
+        drik: { type: string, example: "Samyak" }
+        akriti: { type: string, example: "Madhyam" }
+
+    CreateConsultRequest:
+      type: object
+      required: [doctorId, hospitalId, branchId, tokenId, chiefComplaint]
+      properties:
+        doctorId: { type: string, format: uuid }
+        hospitalId: { type: string, format: uuid }
+        branchId: { type: string, format: uuid }
+        tokenId: { type: string }
+        chiefComplaint: { type: string, example: "Chronic acidity with burning sensation" }
+
+    UpdateConsultRequest:
+      type: object
+      properties:
+        chiefComplaint: { type: string }
+        clinicalExamination:
+          type: object
+          properties:
+            generalCondition: { type: string }
+            vitalSigns: { $ref: "#/components/schemas/VitalSigns" }
+            ashtavidhaPariksha: { $ref: "#/components/schemas/AshtavidhaPariksha" }
+            ayurvedicDiagnosis:
+              type: object
+              properties:
+                dosha:
+                  type: object
+                  properties:
+                    vata: { type: boolean }
+                    pitta: { type: boolean }
+                    kapha: { type: boolean }
+                avastha: { type: string }
+                treatmentPrinciple: { type: string }
+
+    # ── Prescriptions ────────────────────────────────────────────────────────
+    Medicine:
+      type: object
+      required: [medicineName, dosageForm, dosageQty, frequency, timing, durationDays]
+      properties:
+        inventoryItemId: { type: string, format: uuid, nullable: true }
+        medicineName: { type: string, example: "Avipattikar Churna" }
+        dosageForm: { type: string, enum: [CHURNA, TABLET, KADHA, OIL, GHEE, CAPSULE, SYRUP] }
+        dosageQty: { type: number, example: 5 }
+        frequency: { type: string, enum: [ONCE_DAILY, TWICE_DAILY, THRICE_DAILY, AS_NEEDED] }
+        timing: { type: string, enum: [BEFORE_MEALS, AFTER_MEALS, WITH_MEALS, BEDTIME, EMPTY_STOMACH] }
+        durationDays: { type: integer, example: 30 }
+        specialInstructions: { type: string }
+
+    Treatment:
+      type: object
+      required: [treatmentType]
+      properties:
+        treatmentType: { type: string, enum: [ABHYANGA, SWEDANA, BASTI, NASYA, JALAUKAVACHARAN, LEPA, PARISHEK, KATI_BASTI, SHIRO_BASTI] }
+        notes: { type: string }
+        linkedPanchakarmaId: { type: string, format: uuid }
+
+    CreatePrescriptionRequest:
+      type: object
+      required: [patientId, doctorId, hospitalId]
+      properties:
+        patientId: { type: string, format: uuid }
+        doctorId: { type: string, format: uuid }
+        hospitalId: { type: string, format: uuid }
+        medicines: { type: array, items: { $ref: "#/components/schemas/Medicine" } }
+        treatments: { type: array, items: { $ref: "#/components/schemas/Treatment" } }
+        dietInstructions:
+          type: object
+          properties:
+            pathya: { type: array, items: { type: string } }
+            apathya: { type: array, items: { type: string } }
+        followUpDate: { type: string, format: date, example: "2026-05-10" }
+        treatmentDurationDays: { type: integer }
+
+    # ── Panchakarma ──────────────────────────────────────────────────────────
+    CreatePkRequest:
+      type: object
+      required: [patientId, doctorId, hospitalId, branchId, procedureType, totalSessions, startDate, billingMode]
+      properties:
+        patientId: { type: string, format: uuid }
+        doctorId: { type: string, format: uuid }
+        hospitalId: { type: string, format: uuid }
+        branchId: { type: string, format: uuid }
+        procedureType: { type: string, enum: [VAMANA, VIRECHANA, BASTI, NASYA, RAKTAMOKSHANA, OTHER] }
+        totalSessions: { type: integer, minimum: 1, example: 7 }
+        startDate: { type: string, format: date }
+        endDate: { type: string, format: date }
+        billingMode: { type: string, enum: [PER_SESSION, FULL_COURSE] }
+
+    CreateSessionRequest:
+      type: object
+      required: [patientId, sessionNumber, date, therapistId, status]
+      properties:
+        patientId: { type: string, format: uuid }
+        sessionNumber: { type: integer, example: 1 }
+        date: { type: string, format: date }
+        therapistId: { type: string, format: uuid }
+        vitalsBefore: { type: object, properties: { bp: { type: string }, pulse: { type: number } } }
+        vitalsAfter: { type: object, properties: { bp: { type: string }, pulse: { type: number } } }
+        observations: { type: string }
+        doctorNotes: { type: string }
+        status: { type: string, enum: [COMPLETED, SKIPPED] }
+
+    # ── Billing ──────────────────────────────────────────────────────────────
+    LineItem:
+      type: object
+      required: [type, description, quantity, unitPrice]
+      properties:
+        type: { type: string, enum: [CONSULTATION, MEDICINE, PANCHAKARMA, THERAPY] }
+        inventoryItemId: { type: string, format: uuid, nullable: true }
+        description: { type: string, example: "Consultation Fee" }
+        quantity: { type: number, example: 1 }
+        unitPrice: { type: number, example: 500 }
+
+    CreateBillRequest:
+      type: object
+      required: [patientId, hospitalId, branchId, lineItems]
+      properties:
+        patientId: { type: string, format: uuid }
+        hospitalId: { type: string, format: uuid }
+        branchId: { type: string, format: uuid }
+        consultId: { type: string, format: uuid, nullable: true }
+        lineItems: { type: array, items: { $ref: "#/components/schemas/LineItem" }, minItems: 1 }
+        discountType: { type: string, enum: [PERCENTAGE, FIXED], nullable: true }
+        discountValue: { type: number, minimum: 0 }
+        taxRate: { type: number, minimum: 0, maximum: 100, default: 0 }
+
+    AddPaymentRequest:
+      type: object
+      required: [amount, mode]
+      properties:
+        amount: { type: number, minimum: 0.01, example: 500 }
+        mode: { type: string, enum: [CASH, UPI, CARD, BANK_TRANSFER, INSURANCE] }
+        reference: { type: string, example: "UPI-TXN-123456" }
+        paidAt: { type: string, format: date }
+
+    # ── Tokens ───────────────────────────────────────────────────────────────
+    CreateTokenRequest:
+      type: object
+      required: [patientId, doctorId, patientName, doctorName]
+      properties:
+        patientId: { type: string, format: uuid }
+        doctorId: { type: string, format: uuid }
+        patientName: { type: string }
+        doctorName: { type: string }
+        priority: { type: string, enum: [NORMAL, HIGH, EMERGENCY], default: "NORMAL" }
+
+    # ── Inventory ────────────────────────────────────────────────────────────
+    CreateInventoryItemRequest:
+      type: object
+      required: [name, category, unit, purchasePrice, sellingPrice, currentStock, reorderLevel]
+      properties:
+        name: { type: string, example: "Triphala Churna" }
+        genericName: { type: string }
+        category: { type: string, enum: [CLASSICAL_AYURVEDIC, PROPRIETARY, PANCHAKARMA_OIL, HERB, CONSUMABLE] }
+        unit: { type: string, enum: [TABLET, GRAM, ML, BOTTLE, PACKET, PIECE] }
+        purchasePrice: { type: number, minimum: 0, example: 100 }
+        sellingPrice: { type: number, minimum: 0, example: 150 }
+        currentStock: { type: number, minimum: 0, example: 500 }
+        reorderLevel: { type: number, minimum: 0, example: 50 }
+        expiryDate: { type: string, format: date, nullable: true }
+
+    StockInRequest:
+      type: object
+      required: [quantity]
+      properties:
+        quantity: { type: number, minimum: 1, example: 100 }
+        reason: { type: string, example: "Monthly replenishment" }
+        batchNumber: { type: string }
+        expiryDate: { type: string, format: date }
+
+    # ── Forms ────────────────────────────────────────────────────────────────
+    FormField:
+      type: object
+      required: [fieldId, name, label, labelMr, type, order]
+      properties:
+        fieldId: { type: string, format: uuid }
+        name: { type: string }
+        label: { type: string }
+        labelMr: { type: string }
+        type: { type: string, enum: [TEXT, NUMBER, DATE, DATETIME, EMAIL, PHONE, DROPDOWN, CHECKBOX, RADIO, MULTI_SELECT, TEXTAREA, BODY_MAP] }
+        required: { type: boolean, default: false }
+        order: { type: integer }
+        options:
+          type: array
+          items:
+            type: object
+            properties:
+              value: { type: string }
+              label: { type: string }
+              labelMr: { type: string }
+
+    CreateFormRequest:
+      type: object
+      required: [formType, name, nameMr, sections]
+      properties:
+        formType: { type: string, enum: [PATIENT_REGISTRATION, PATIENT_HISTORY, CONSULTATION, PANCHAKARMA] }
+        name: { type: string, example: "Rognpatrak" }
+        nameMr: { type: string, example: "रोगपत्रक" }
+        sections:
+          type: array
+          items:
+            type: object
+            required: [sectionId, title, titleMr, order, fields]
+            properties:
+              sectionId: { type: string, format: uuid }
+              title: { type: string }
+              titleMr: { type: string }
+              order: { type: integer }
+              fields: { type: array, items: { $ref: "#/components/schemas/FormField" } }
+
+paths:
+  # ═══════════════════════════════════════════════════════════════════
+  # AUTH
+  # ═══════════════════════════════════════════════════════════════════
+  /auth/register-hospital:
+    post:
+      tags: [Auth]
+      summary: Register a new hospital and super admin
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RegisterHospitalRequest" }
+            example:
+              hospitalName: "Mitram Ayurveda"
+              adminEmail: "admin@mitramayurveda.com"
+              password: "Admin@1234!"
+              hospitalType: "AYURVEDIC"
+              phone: "9876543210"
+      responses:
+        "201":
+          description: Hospital registered
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessResponse" }
+              example:
+                success: true
+                data: { hospitalId: "uuid", userId: "uuid", message: "Hospital registered successfully" }
+        "409": { description: Email already exists, content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login and obtain JWT tokens
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LoginRequest" }
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - { $ref: "#/components/schemas/SuccessResponse" }
+              example:
+                success: true
+                data:
+                  accessToken: "eyJhbGc..."
+                  refreshToken: "eyJhbGc..."
+                  userId: "uuid"
+                  hospitalId: "uuid"
+                  role: "SUPER_ADMIN"
+        "401": { description: Invalid credentials }
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Refresh access token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken: { type: string }
+      responses:
+        "200": { description: Token refreshed }
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Logout (invalidate session)
+      responses:
+        "200": { description: Logged out }
+
+  /auth/forgot-password:
+    post:
+      tags: [Auth]
+      summary: Initiate password reset
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        "200": { description: Reset instructions sent }
+
+  /auth/reset-password:
+    post:
+      tags: [Auth]
+      summary: Confirm password reset with code
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, confirmationCode, newPassword]
+              properties:
+                email: { type: string, format: email }
+                confirmationCode: { type: string }
+                newPassword: { type: string, minLength: 8 }
+      responses:
+        "200": { description: Password reset successful }
+
+  # ═══════════════════════════════════════════════════════════════════
+  # USERS
+  # ═══════════════════════════════════════════════════════════════════
+  /users:
+    get:
+      tags: [Users]
+      summary: List all users in caller's hospital
+      parameters:
+        - { name: limit, in: query, schema: { type: integer, default: 20, maximum: 100 } }
+        - { name: lastKey, in: query, schema: { type: string } }
+      responses:
+        "200": { description: User list, content: { application/json: { schema: { $ref: "#/components/schemas/PaginatedResponse" } } } }
+    post:
+      tags: [Users]
+      summary: Create a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateUserRequest" }
+      responses:
+        "201": { description: User created }
+        "409": { description: Email already exists }
+
+  /users/{userId}:
+    parameters:
+      - { name: userId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Users]
+      summary: Get a specific user
+      responses:
+        "200": { description: User details }
+        "404": { description: User not found }
+    put:
+      tags: [Users]
+      summary: Update user details
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateUserRequest" }
+      responses:
+        "200": { description: User updated }
+    delete:
+      tags: [Users]
+      summary: Delete (deactivate) a user
+      responses:
+        "200": { description: User deleted }
+
+  # ═══════════════════════════════════════════════════════════════════
+  # HOSPITALS
+  # ═══════════════════════════════════════════════════════════════════
+  /hospitals/{hospitalId}:
+    parameters:
+      - { name: hospitalId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Hospitals]
+      summary: Get hospital details
+      responses:
+        "200": { description: Hospital details }
+        "403": { description: Hospital mismatch }
+    put:
+      tags: [Hospitals]
+      summary: Update hospital details
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                address: { type: string }
+                gstin: { type: string }
+                contactPhone: { type: string }
+                consultationFee: { type: number }
+      responses:
+        "200": { description: Hospital updated }
+
+  # ═══════════════════════════════════════════════════════════════════
+  # BRANCHES
+  # ═══════════════════════════════════════════════════════════════════
+  /hospitals/{hospitalId}/branches:
+    parameters:
+      - { name: hospitalId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Branches]
+      summary: List all branches
+      responses:
+        "200": { description: Branch list }
+    post:
+      tags: [Branches]
+      summary: Create a new branch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateBranchRequest" }
+      responses:
+        "201": { description: Branch created }
+
+  /hospitals/{hospitalId}/branches/{branchId}:
+    parameters:
+      - { name: hospitalId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: branchId, in: path, required: true, schema: { type: string, format: uuid } }
+    put:
+      tags: [Branches]
+      summary: Update a branch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateBranchRequest" }
+      responses:
+        "200": { description: Branch updated }
+
+  # ═══════════════════════════════════════════════════════════════════
+  # DOCTORS
+  # ═══════════════════════════════════════════════════════════════════
+  /hospitals/{hospitalId}/doctors:
+    parameters:
+      - { name: hospitalId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Doctors]
+      summary: List all doctors
+      responses:
+        "200": { description: Doctor list }
+    post:
+      tags: [Doctors]
+      summary: Create a doctor profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateDoctorRequest" }
+      responses:
+        "201": { description: Doctor created }
+
+  /hospitals/{hospitalId}/doctors/{doctorId}:
+    parameters:
+      - { name: hospitalId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: doctorId, in: path, required: true, schema: { type: string, format: uuid } }
+    put:
+      tags: [Doctors]
+      summary: Update doctor profile
+      responses:
+        "200": { description: Doctor updated }
+    delete:
+      tags: [Doctors]
+      summary: Delete doctor profile
+      responses:
+        "200": { description: Doctor deleted }
+
+  # ═══════════════════════════════════════════════════════════════════
+  # PATIENTS
+  # ═══════════════════════════════════════════════════════════════════
+  /hospitals/{hospitalId}/branches/{branchId}/patients:
+    parameters:
+      - { name: hospitalId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: branchId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Patients]
+      summary: List patients in a branch
+      responses:
+        "200": { description: Patient list }
+    post:
+      tags: [Patients]
+      summary: Register a new patient
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreatePatientRequest" }
+            example:
+              patientName: "Ramesh Narayan Kulkarni"
+              assignedDoctorId: "uuid"
+              mobileNumber: "9876543210"
+              formData:
+                formTemplateId: "uuid"
+                formVersion: 1
+                responses:
+                  "field-uuid-1": "Ramesh Kulkarni"
+                  "field-uuid-2": 45
+      responses:
+        "201":
+          description: Patient registered
+          content:
+            application/json:
+              example:
+                success: true
+                data: { patientId: "uuid", uhid: "MAY-0001", tokenNumber: 1 }
+
+  /hospitals/{hospitalId}/branches/{branchId}/patients/{patientId}:
+    parameters:
+      - { name: hospitalId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: branchId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: patientId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Patients]
+      summary: Get patient profile
+      responses:
+        "200": { description: Patient details }
+        "404": { description: Patient not found }
+    put:
+      tags: [Patients]
+      summary: Update patient profile
+      responses:
+        "200": { description: Patient updated }
+
+  /hospitals/{hospitalId}/patients/search:
+    parameters:
+      - { name: hospitalId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: q, in: query, required: true, schema: { type: string, minLength: 2 }, description: "Search by name or 10-digit mobile" }
+    get:
+      tags: [Patients]
+      summary: Search patients by name or mobile
+      responses:
+        "200": { description: Search results }
+
+  /hospitals/{hospitalId}/patients/{patientId}/history:
+    parameters:
+      - { name: hospitalId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: patientId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Patients]
+      summary: Get patient history list
+      responses:
+        "200": { description: History entries }
+    post:
+      tags: [Patients]
+      summary: Add a history entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [formData]
+              properties:
+                formData: { $ref: "#/components/schemas/FormData" }
+      responses:
+        "201": { description: History added }
+
+  # ═══════════════════════════════════════════════════════════════════
+  # CONSULTATIONS
+  # ═══════════════════════════════════════════════════════════════════
+  /patients/{patientId}/consultations:
+    parameters:
+      - { name: patientId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Consultations]
+      summary: Get all consultations for a patient
+      responses:
+        "200": { description: Consultation list }
+    post:
+      tags: [Consultations]
+      summary: Create a new consultation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateConsultRequest" }
+      responses:
+        "201": { description: Consultation created }
+
+  /patients/{patientId}/consultations/{consultId}:
+    parameters:
+      - { name: patientId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: consultId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Consultations]
+      summary: Get consultation detail
+      responses:
+        "200": { description: Consultation details }
+    put:
+      tags: [Consultations]
+      summary: Update consultation (clinical examination)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateConsultRequest" }
+      responses:
+        "200": { description: Consultation updated }
+
+  /patients/{patientId}/consultations/{consultId}/complete:
+    parameters:
+      - { name: patientId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: consultId, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      tags: [Consultations]
+      summary: Mark consultation as complete
+      responses:
+        "200": { description: Consultation completed }
+
+  # ═══════════════════════════════════════════════════════════════════
+  # PRESCRIPTIONS
+  # ═══════════════════════════════════════════════════════════════════
+  /consultations/{consultId}/prescriptions:
+    parameters:
+      - { name: consultId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Prescriptions]
+      summary: Get prescriptions for a consultation
+      responses:
+        "200": { description: Prescription list }
+    post:
+      tags: [Prescriptions]
+      summary: Create a prescription
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreatePrescriptionRequest" }
+      responses:
+        "201": { description: Prescription created }
+
+  /consultations/{consultId}/prescriptions/{rxId}:
+    parameters:
+      - { name: consultId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: rxId, in: path, required: true, schema: { type: string, format: uuid } }
+    put:
+      tags: [Prescriptions]
+      summary: Update a prescription
+      responses:
+        "200": { description: Prescription updated }
+
+  /consultations/{consultId}/prescriptions/{rxId}/pdf:
+    parameters:
+      - { name: consultId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: rxId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Prescriptions]
+      summary: Get prescription PDF presigned URL
+      responses:
+        "200": { description: Presigned URL }
+
+  # ═══════════════════════════════════════════════════════════════════
+  # PANCHAKARMA
+  # ═══════════════════════════════════════════════════════════════════
+  /patients/{patientId}/panchakarma:
+    parameters:
+      - { name: patientId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Panchakarma]
+      summary: Get all Panchakarma plans for a patient
+      responses:
+        "200": { description: Plans list }
+    post:
+      tags: [Panchakarma]
+      summary: Create a Panchakarma plan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreatePkRequest" }
+      responses:
+        "201": { description: Plan created }
+
+  /panchakarma/{pkId}:
+    parameters:
+      - { name: pkId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: patientId, in: query, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Panchakarma]
+      summary: Get Panchakarma plan detail
+      responses:
+        "200": { description: Plan details }
+    put:
+      tags: [Panchakarma]
+      summary: Update Panchakarma plan
+      responses:
+        "200": { description: Plan updated }
+
+  /panchakarma/{pkId}/sessions:
+    parameters:
+      - { name: pkId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Panchakarma]
+      summary: Get all sessions for a plan
+      responses:
+        "200": { description: Session list }
+    post:
+      tags: [Panchakarma]
+      summary: Add a session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateSessionRequest" }
+      responses:
+        "201": { description: Session added }
+
+  /panchakarma/{pkId}/sessions/{sessionId}:
+    parameters:
+      - { name: pkId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: sessionId, in: path, required: true, schema: { type: string, format: uuid } }
+    put:
+      tags: [Panchakarma]
+      summary: Update a session
+      responses:
+        "200": { description: Session updated }
+
+  /panchakarma/{pkId}/complete:
+    parameters:
+      - { name: pkId, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      tags: [Panchakarma]
+      summary: Mark plan as complete
+      responses:
+        "200": { description: Plan completed }
+
+  # ═══════════════════════════════════════════════════════════════════
+  # BILLING
+  # ═══════════════════════════════════════════════════════════════════
+  /patients/{patientId}/bills:
+    parameters:
+      - { name: patientId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Billing]
+      summary: Get all bills for a patient
+      responses:
+        "200": { description: Bill list }
+    post:
+      tags: [Billing]
+      summary: Create a new bill
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateBillRequest" }
+      responses:
+        "201": { description: Bill created }
+
+  /bills/{billId}:
+    parameters:
+      - { name: billId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: patientId, in: query, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Billing]
+      summary: Get bill details
+      responses:
+        "200": { description: Bill details }
+    put:
+      tags: [Billing]
+      summary: Update bill
+      responses:
+        "200": { description: Bill updated }
+
+  /bills/{billId}/payments:
+    parameters:
+      - { name: billId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: patientId, in: query, required: true, schema: { type: string, format: uuid } }
+    post:
+      tags: [Billing]
+      summary: Add a payment to a bill
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AddPaymentRequest" }
+      responses:
+        "200": { description: Payment recorded }
+
+  /hospitals/{hospitalId}/bills/summary:
+    parameters:
+      - { name: hospitalId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: from, in: query, required: true, schema: { type: string, format: date } }
+      - { name: to, in: query, required: true, schema: { type: string, format: date } }
+    get:
+      tags: [Billing]
+      summary: Get billing summary for hospital
+      responses:
+        "200": { description: Billing summary }
+
+  # ═══════════════════════════════════════════════════════════════════
+  # TOKENS
+  # ═══════════════════════════════════════════════════════════════════
+  /hospitals/{hospitalId}/branches/{branchId}/tokens:
+    parameters:
+      - { name: hospitalId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: branchId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Tokens]
+      summary: Get today's tokens
+      responses:
+        "200": { description: Token queue }
+    post:
+      tags: [Tokens]
+      summary: Issue a new token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateTokenRequest" }
+      responses:
+        "201": { description: Token issued }
+
+  /hospitals/{hospitalId}/branches/{branchId}/tokens/display:
+    parameters:
+      - { name: hospitalId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: branchId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Tokens]
+      summary: "Public display board queue (NO AUTH REQUIRED)"
+      description: "This endpoint is unauthenticated — intended for TV/kiosk displays in waiting areas."
+      security: []
+      responses:
+        "200":
+          description: Current queue state
+          content:
+            application/json:
+              example:
+                success: true
+                data:
+                  currentToken: { tokenNumber: 5, patientName: "R. Kulkarni", doctorName: "Dr. Kumar" }
+                  waiting: 3
+                  nextTokens: []
+
+  /hospitals/{hospitalId}/branches/{branchId}/tokens/next:
+    parameters:
+      - { name: hospitalId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: branchId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: doctorId, in: query, schema: { type: string, format: uuid } }
+    get:
+      tags: [Tokens]
+      summary: Get next token for a doctor
+      responses:
+        "200": { description: Next token }
+
+  /tokens/{tokenId}/call:
+    parameters:
+      - { name: tokenId, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      tags: [Tokens]
+      summary: Call a token
+      responses:
+        "200": { description: Token called }
+
+  /tokens/{tokenId}/skip:
+    parameters:
+      - { name: tokenId, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      tags: [Tokens]
+      summary: Skip a token
+      responses:
+        "200": { description: Token skipped }
+
+  /tokens/{tokenId}/complete:
+    parameters:
+      - { name: tokenId, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      tags: [Tokens]
+      summary: Complete a token (patient seen)
+      responses:
+        "200": { description: Token completed }
+
+  /tokens/{tokenId}/priority:
+    parameters:
+      - { name: tokenId, in: path, required: true, schema: { type: string, format: uuid } }
+    put:
+      tags: [Tokens]
+      summary: Update token priority
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [priority]
+              properties:
+                priority: { type: string, enum: [NORMAL, HIGH, EMERGENCY] }
+      responses:
+        "200": { description: Priority updated }
+
+  # ═══════════════════════════════════════════════════════════════════
+  # INVENTORY
+  # ═══════════════════════════════════════════════════════════════════
+  /hospitals/{hospitalId}/inventory:
+    parameters:
+      - { name: hospitalId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Inventory]
+      summary: List all inventory items
+      responses:
+        "200": { description: Inventory list }
+    post:
+      tags: [Inventory]
+      summary: Add inventory item
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateInventoryItemRequest" }
+      responses:
+        "201": { description: Item added }
+
+  /hospitals/{hospitalId}/inventory/{itemId}:
+    parameters:
+      - { name: hospitalId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: itemId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Inventory]
+      summary: Get inventory item
+      responses:
+        "200": { description: Item details }
+    put:
+      tags: [Inventory]
+      summary: Update inventory item
+      responses:
+        "200": { description: Item updated }
+    delete:
+      tags: [Inventory]
+      summary: Archive inventory item
+      responses:
+        "200": { description: Item archived }
+
+  /hospitals/{hospitalId}/inventory/{itemId}/stock-in:
+    parameters:
+      - { name: hospitalId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: itemId, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      tags: [Inventory]
+      summary: Record stock-in
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/StockInRequest" }
+      responses:
+        "201": { description: Stock-in recorded }
+
+  /hospitals/{hospitalId}/inventory/{itemId}/adjust:
+    parameters:
+      - { name: hospitalId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: itemId, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      tags: [Inventory]
+      summary: Manual stock adjustment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [quantity, reason]
+              properties:
+                quantity: { type: number, example: -5 }
+                reason: { type: string, example: "Damaged stock removal" }
+      responses:
+        "201": { description: Adjustment recorded }
+
+  /hospitals/{hospitalId}/inventory/alerts/low-stock:
+    parameters:
+      - { name: hospitalId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Inventory]
+      summary: Get low stock alerts
+      responses:
+        "200": { description: Low stock items }
+
+  /hospitals/{hospitalId}/inventory/alerts/expiry:
+    parameters:
+      - { name: hospitalId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Inventory]
+      summary: Get expiry alerts
+      responses:
+        "200": { description: Near-expiry items }
+
+  # ═══════════════════════════════════════════════════════════════════
+  # FORMS
+  # ═══════════════════════════════════════════════════════════════════
+  /hospitals/{hospitalId}/forms:
+    parameters:
+      - { name: hospitalId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Forms]
+      summary: List all form templates
+      responses:
+        "200": { description: Form list }
+    post:
+      tags: [Forms]
+      summary: Create a form template
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateFormRequest" }
+      responses:
+        "201": { description: Form created }
+
+  /hospitals/{hospitalId}/forms/{formId}:
+    parameters:
+      - { name: hospitalId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: formId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: version, in: query, schema: { type: integer } }
+    get:
+      tags: [Forms]
+      summary: Get a form template (optionally specific version)
+      responses:
+        "200": { description: Form details }
+    put:
+      tags: [Forms]
+      summary: Update a form template (creates new draft version)
+      responses:
+        "200": { description: Form updated }
+    delete:
+      tags: [Forms]
+      summary: Delete a form template
+      responses:
+        "200": { description: Form deleted }
+
+  /hospitals/{hospitalId}/forms/{formId}/publish:
+    parameters:
+      - { name: hospitalId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: formId, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      tags: [Forms]
+      summary: Publish a form template version
+      responses:
+        "200": { description: Form published }
+
+  # ═══════════════════════════════════════════════════════════════════
+  # REPORTS
+  # ═══════════════════════════════════════════════════════════════════
+  /reports/jobs/{jobId}:
+    parameters:
+      - { name: jobId, in: path, required: true, schema: { type: string } }
+    get:
+      tags: [Reports]
+      summary: Poll async report job status
+      responses:
+        "200":
+          description: Job status
+          content:
+            application/json:
+              example:
+                success: true
+                data:
+                  status: "COMPLETED"
+                  presignedUrl: "https://s3.amazonaws.com/..."
+                  expiresIn: 3600
+
+  /reports/patients/{patientId}/full-history:
+    parameters:
+      - { name: patientId, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      tags: [Reports]
+      summary: Trigger full patient history PDF (async)
+      responses:
+        "202": { description: Job queued, content: { application/json: { example: { success: true, data: { jobId: "uuid" } } } } }
+
+  /reports/consultations/{consultId}/visit-summary:
+    parameters:
+      - { name: consultId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: patientId, in: query, required: true, schema: { type: string, format: uuid } }
+    post:
+      tags: [Reports]
+      summary: Trigger visit summary PDF (async)
+      responses:
+        "202": { description: Job queued }
+
+  /reports/panchakarma/{pkId}/summary:
+    parameters:
+      - { name: pkId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: patientId, in: query, required: true, schema: { type: string, format: uuid } }
+    post:
+      tags: [Reports]
+      summary: Trigger Panchakarma summary PDF (async)
+      responses:
+        "202": { description: Job queued }
+
+  /reports/patients/{patientId}/discharge-summary:
+    parameters:
+      - { name: patientId, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      tags: [Reports]
+      summary: Trigger discharge summary PDF (async)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                dischargeNotes: { type: string }
+      responses:
+        "202": { description: Job queued }
+
+  /hospitals/{hospitalId}/reports/opd-daily:
+    parameters:
+      - { name: hospitalId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: date, in: query, schema: { type: string, format: date } }
+    get:
+      tags: [Reports]
+      summary: Get daily OPD report
+      responses:
+        "200": { description: OPD report }
+
+  /hospitals/{hospitalId}/reports/revenue:
+    parameters:
+      - { name: hospitalId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: from, in: query, required: true, schema: { type: string, format: date } }
+      - { name: to, in: query, required: true, schema: { type: string, format: date } }
+    get:
+      tags: [Reports]
+      summary: Get revenue report
+      responses:
+        "200": { description: Revenue breakdown }
+
+  /hospitals/{hospitalId}/reports/inventory-usage:
+    parameters:
+      - { name: hospitalId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: from, in: query, required: true, schema: { type: string, format: date } }
+      - { name: to, in: query, required: true, schema: { type: string, format: date } }
+    get:
+      tags: [Reports]
+      summary: Inventory usage report
+      responses:
+        "200": { description: Usage data }
+
+  /hospitals/{hospitalId}/reports/doctor-load:
+    parameters:
+      - { name: hospitalId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: from, in: query, required: true, schema: { type: string, format: date } }
+      - { name: to, in: query, required: true, schema: { type: string, format: date } }
+    get:
+      tags: [Reports]
+      summary: Doctor consultation load report
+      responses:
+        "200": { description: Doctor load data }
+
+  # ═══════════════════════════════════════════════════════════════════
+  # DASHBOARD
+  # ═══════════════════════════════════════════════════════════════════
+  /hospitals/{hospitalId}/dashboard/admin:
+    parameters:
+      - { name: hospitalId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Dashboard]
+      summary: Admin KPI dashboard (revenue, patient growth, top complaints)
+      responses:
+        "200":
+          description: Dashboard KPIs
+          content:
+            application/json:
+              example:
+                success: true
+                data:
+                  patientGrowth: [{ date: "2026-04-01", newPatients: 3, returningPatients: 5 }]
+                  topComplaints: [{ complaint: "पित्त", count: 12 }]
+                  revenueTrend: [{ date: "2026-04-01", revenue: 4500 }]
+                  doctorPerformance: [{ doctorName: "Dr. Kumar", avgConsultationsPerDay: 8.5 }]
+                  inventoryTurnover: [{ itemName: "Dashamoola Taila", unitsUsed: 1500 }]
+
+  /hospitals/{hospitalId}/dashboard/doctor:
+    parameters:
+      - { name: hospitalId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Dashboard]
+      summary: Doctor dashboard (today's queue, recent patients)
+      responses:
+        "200": { description: Doctor dashboard }
+
+  /hospitals/{hospitalId}/dashboard/reception:
+    parameters:
+      - { name: hospitalId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Dashboard]
+      summary: Reception dashboard (token queue, pending bills)
+      responses:
+        "200": { description: Reception dashboard }

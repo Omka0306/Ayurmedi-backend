@@ -1,0 +1,110 @@
+
+[!] You have 483 resources in your service. CloudFormation has a hard limit of 500 resources in a service. For advice on avoiding this limit, check out this link: http://slss.io/2q2.
+service: ayurmedi-backend
+
+stage: dev
+
+region: ap-south-1
+
+stack: ayurmedi-backend-dev
+
+functions:
+  customAuthorizer: ayurmedi-backend-dev-customAuthorizer
+  registerHospital: ayurmedi-backend-dev-registerHospital
+  login: ayurmedi-backend-dev-login
+  refresh: ayurmedi-backend-dev-refresh
+  logout: ayurmedi-backend-dev-logout
+  forgotPassword: ayurmedi-backend-dev-forgotPassword
+  resetPassword: ayurmedi-backend-dev-resetPassword
+  changePassword: ayurmedi-backend-dev-changePassword
+  listUsers: ayurmedi-backend-dev-listUsers
+  createUser: ayurmedi-backend-dev-createUser
+  getUser: ayurmedi-backend-dev-getUser
+  updateUser: ayurmedi-backend-dev-updateUser
+  deleteUser: ayurmedi-backend-dev-deleteUser
+  getHospital: ayurmedi-backend-dev-getHospital
+  updateHospital: ayurmedi-backend-dev-updateHospital
+  createBranch: ayurmedi-backend-dev-createBranch
+  listBranches: ayurmedi-backend-dev-listBranches
+  updateBranch: ayurmedi-backend-dev-updateBranch
+  createDoctor: ayurmedi-backend-dev-createDoctor
+  listDoctors: ayurmedi-backend-dev-listDoctors
+  updateDoctor: ayurmedi-backend-dev-updateDoctor
+  deleteDoctor: ayurmedi-backend-dev-deleteDoctor
+  createForm: ayurmedi-backend-dev-createForm
+  listForms: ayurmedi-backend-dev-listForms
+  getForm: ayurmedi-backend-dev-getForm
+  updateForm: ayurmedi-backend-dev-updateForm
+  deleteForm: ayurmedi-backend-dev-deleteForm
+  publishForm: ayurmedi-backend-dev-publishForm
+  createPatient: ayurmedi-backend-dev-createPatient
+  listPatients: ayurmedi-backend-dev-listPatients
+  getPatient: ayurmedi-backend-dev-getPatient
+  updatePatient: ayurmedi-backend-dev-updatePatient
+  searchPatients: ayurmedi-backend-dev-searchPatients
+  addHistory: ayurmedi-backend-dev-addHistory
+  getHistoryList: ayurmedi-backend-dev-getHistoryList
+  getHistoryDetail: ayurmedi-backend-dev-getHistoryDetail
+  createConsultation: ayurmedi-backend-dev-createConsultation
+  getConsultations: ayurmedi-backend-dev-getConsultations
+  getConsultationDetail: ayurmedi-backend-dev-getConsultationDetail
+  updateConsultation: ayurmedi-backend-dev-updateConsultation
+  completeConsultation: ayurmedi-backend-dev-completeConsultation
+  createPrescription: ayurmedi-backend-dev-createPrescription
+  getPrescriptions: ayurmedi-backend-dev-getPrescriptions
+  updatePrescription: ayurmedi-backend-dev-updatePrescription
+  getPrescriptionPdf: ayurmedi-backend-dev-getPrescriptionPdf
+  createPanchakarma: ayurmedi-backend-dev-createPanchakarma
+  getPanchakarmas: ayurmedi-backend-dev-getPanchakarmas
+  getPanchakarma: ayurmedi-backend-dev-getPanchakarma
+  updatePanchakarma: ayurmedi-backend-dev-updatePanchakarma
+  addSession: ayurmedi-backend-dev-addSession
+  getSessions: ayurmedi-backend-dev-getSessions
+  updateSession: ayurmedi-backend-dev-updateSession
+  completePanchakarma: ayurmedi-backend-dev-completePanchakarma
+  getPkReportPdf: ayurmedi-backend-dev-getPkReportPdf
+  createToken: ayurmedi-backend-dev-createToken
+  getTokensToday: ayurmedi-backend-dev-getTokensToday
+  getDisplayQueue: ayurmedi-backend-dev-getDisplayQueue
+  callToken: ayurmedi-backend-dev-callToken
+  skipToken: ayurmedi-backend-dev-skipToken
+  completeToken: ayurmedi-backend-dev-completeToken
+  updatePriority: ayurmedi-backend-dev-updatePriority
+  getNextToken: ayurmedi-backend-dev-getNextToken
+  createBill: ayurmedi-backend-dev-createBill
+  getPatientBills: ayurmedi-backend-dev-getPatientBills
+  getBill: ayurmedi-backend-dev-getBill
+  updateBill: ayurmedi-backend-dev-updateBill
+  addPayment: ayurmedi-backend-dev-addPayment
+  getBillPdf: ayurmedi-backend-dev-getBillPdf
+  getBillsSummary: ayurmedi-backend-dev-getBillsSummary
+  createInventoryItem: ayurmedi-backend-dev-createInventoryItem
+  listInventoryItems: ayurmedi-backend-dev-listInventoryItems
+  getInventoryItem: ayurmedi-backend-dev-getInventoryItem
+  updateInventoryItem: ayurmedi-backend-dev-updateInventoryItem
+  deleteInventoryItem: ayurmedi-backend-dev-deleteInventoryItem
+  stockInInventoryItem: ayurmedi-backend-dev-stockInInventoryItem
+  stockAdjustInventoryItem: ayurmedi-backend-dev-stockAdjustInventoryItem
+  getLowStockAlerts: ayurmedi-backend-dev-getLowStockAlerts
+  getExpiryAlerts: ayurmedi-backend-dev-getExpiryAlerts
+  inventoryAlertScheduler: ayurmedi-backend-dev-inventoryAlertScheduler
+  triggerFullHistory: ayurmedi-backend-dev-triggerFullHistory
+  triggerVisitSummary: ayurmedi-backend-dev-triggerVisitSummary
+  triggerPkSummary: ayurmedi-backend-dev-triggerPkSummary
+  triggerDischargeSummary: ayurmedi-backend-dev-triggerDischargeSummary
+  getDailyOpd: ayurmedi-backend-dev-getDailyOpd
+  getRevenueReport: ayurmedi-backend-dev-getRevenueReport
+  getInventoryUsage: ayurmedi-backend-dev-getInventoryUsage
+  getDoctorLoad: ayurmedi-backend-dev-getDoctorLoad
+  getReportsLowStock: ayurmedi-backend-dev-getReportsLowStock
+  getReportsExpiry: ayurmedi-backend-dev-getReportsExpiry
+  getJobStatus: ayurmedi-backend-dev-getJobStatus
+  reportWorker: ayurmedi-backend-dev-reportWorker
+  getAdminDashboard: ayurmedi-backend-dev-getAdminDashboard
+  getDoctorDashboard: ayurmedi-backend-dev-getDoctorDashboard
+  getReceptionDashboard: ayurmedi-backend-dev-getReceptionDashboard
+  scheduledKpi: ayurmedi-backend-dev-scheduledKpi
+
+layers:
+  pdfkitLayer: undefined
+

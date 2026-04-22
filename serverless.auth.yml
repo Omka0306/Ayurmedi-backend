@@ -1,0 +1,205 @@
+# Auth & Users Stack
+service: ayurmedi-auth
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ap-south-1
+  stage: ${opt:stage, 'dev'}
+  tracing:
+    lambda: true
+    apiGateway: true
+  timeout: 29
+  memorySize: 512
+  environment:
+    STAGE: ${self:provider.stage}
+    TABLE_NAME: ${ssm:/ayurmedi/${self:provider.stage}/TABLE_NAME, 'AyurMediTable-dev'}
+    COGNITO_USER_POOL_ID: ${ssm:/ayurmedi/${self:provider.stage}/COGNITO_USER_POOL_ID, 'ap-south-1_mockPool1'}
+    COGNITO_APP_CLIENT_ID: ${ssm:/ayurmedi/${self:provider.stage}/COGNITO_APP_CLIENT_ID, 'mockClient1234'}
+    S3_BUCKET: ${ssm:/ayurmedi/${self:provider.stage}/S3_BUCKET, 'mock-bucket'}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:GetItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            - dynamodb:Query
+            - dynamodb:Scan
+          Resource:
+            - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TABLE_NAME}
+            - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TABLE_NAME}/index/*
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource:
+            - arn:aws:logs:${self:provider.region}:*:log-group:/aws/lambda/*:*:*
+        - Effect: Allow
+          Action:
+            - xray:PutTraceSegments
+            - xray:PutTelemetryRecords
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - ssm:GetParameter
+          Resource:
+            - arn:aws:ssm:${self:provider.region}:*:parameter/ayurmedi/${self:provider.stage}/*
+        - Effect: Allow
+          Action:
+            - cognito-idp:AdminCreateUser
+            - cognito-idp:AdminSetUserPassword
+            - cognito-idp:AdminDeleteUser
+            - cognito-idp:AdminGetUser
+            - cognito-idp:AdminUpdateUserAttributes
+            - cognito-idp:InitiateAuth
+            - cognito-idp:GlobalSignOut
+            - cognito-idp:ChangePassword
+            - cognito-idp:ResendConfirmationCode
+            - cognito-idp:ConfirmForgotPassword
+            - cognito-idp:AdminAddUserToGroup
+          Resource: "*"
+
+functions:
+  customAuthorizer:
+    handler: src/common/auth.authorizer
+
+  preTokenGen:
+    handler: src/common/preTokenGen.handler
+
+  registerHospital:
+    handler: src/modules/auth/handler.registerHospital
+    events:
+      - http:
+          path: /auth/register-hospital
+          method: post
+          cors: true
+
+  login:
+    handler: src/modules/auth/handler.login
+    events:
+      - http:
+          path: /auth/login
+          method: post
+          cors: true
+
+  refresh:
+    handler: src/modules/auth/handler.refresh
+    events:
+      - http:
+          path: /auth/refresh
+          method: post
+          cors: true
+
+  logout:
+    handler: src/modules/auth/handler.logout
+    events:
+      - http:
+          path: /auth/logout
+          method: post
+          cors: true
+
+  forgotPassword:
+    handler: src/modules/auth/handler.forgotPassword
+    events:
+      - http:
+          path: /auth/forgot-password
+          method: post
+          cors: true
+
+  resetPassword:
+    handler: src/modules/auth/handler.resetPassword
+    events:
+      - http:
+          path: /auth/reset-password
+          method: post
+          cors: true
+
+  changePassword:
+    handler: src/modules/auth/handler.changePassword
+    events:
+      - http:
+          path: /auth/change-password
+          method: post
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            type: token
+
+  listUsers:
+    handler: src/modules/users/handler.listUsers
+    events:
+      - http:
+          path: /users
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            type: token
+
+  createUser:
+    handler: src/modules/users/handler.createUser
+    events:
+      - http:
+          path: /users
+          method: post
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            type: token
+
+  getUser:
+    handler: src/modules/users/handler.getUser
+    events:
+      - http:
+          path: /users/{userId}
+          method: get
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            type: token
+
+  updateUser:
+    handler: src/modules/users/handler.updateUser
+    events:
+      - http:
+          path: /users/{userId}
+          method: put
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            type: token
+
+  deleteUser:
+    handler: src/modules/users/handler.deleteUser
+    events:
+      - http:
+          path: /users/{userId}
+          method: delete
+          cors: true
+          authorizer:
+            name: customAuthorizer
+            type: token
+
+resources:
+  Resources:
+    AuthorizerPermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        FunctionName: !GetAtt CustomAuthorizerLambdaFunction.Arn
+        Action: lambda:InvokeFunction
+        Principal: apigateway.amazonaws.com
+        SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:*/*/*"
+
+  Outputs:
+    AuthorizerLambdaArn:
+      Value: !GetAtt CustomAuthorizerLambdaFunction.Arn
+      Export:
+        Name: ayurmedi-${self:provider.stage}-AuthorizerLambdaArn
+    ApiGatewayRestApiId:
+      Value: !Ref ApiGatewayRestApi
+      Export:
+        Name: ayurmedi-${self:provider.stage}-AuthApiGatewayRestApiId
